@@ -16,7 +16,8 @@
       * **Note for Windows users:** You may need to adjust permissions if creating the venv is blocked. Run:
         * `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
       * Commands for creating and activating the virtual environment:
-        * **Windows:** `python -m venv venv` -> `venv\Scripts\activate`
+        * **Windows:** `python -m venv venv` -> `venv/Scripts/activate`
         * **Linux/Unix:** `virtualenv venv` -> `source venv/bin/activate`
+    * run `pip install -r requirements.txt`
     * Start the server by running *`python server.py`*
     * Now, navigate back to **localhost** in your browser to see your frontend interacting with API calls.

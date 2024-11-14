@@ -21,3 +21,6 @@
     * run `pip install -r requirements.txt`
     * Start the server by running *`python server.py`*
     * Now, navigate back to **localhost** in your browser to see your frontend interacting with API calls.
+   
+    # Prototype link:
+    * https://www.figma.com/proto/GeJhQNc8f5Wv8bKPBnDRGC/WireFrame-CargoPilot?node-id=0-1&t=DZZyThVtM04yp12m-1

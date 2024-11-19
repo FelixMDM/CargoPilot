@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Options from '@/components/options/Options';
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = () => {
-        // Placeholder for login logic
+        // login logic
         alert(`Logged in as: ${username}`);
     };
 

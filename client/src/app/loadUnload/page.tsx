@@ -1,6 +1,7 @@
+import LoadUnload from "@/components/loadUnload/LoadUnload";
 
 const page = () => {
-    return <div>load and unload</div>
+    return <div><LoadUnload/></div>
 }
 
 export default page;

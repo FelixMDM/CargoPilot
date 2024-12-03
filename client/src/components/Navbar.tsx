@@ -10,9 +10,9 @@ const Navbar = () => {
                     <Link href="/login" className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
                         Login
                     </Link>
-                    
-                    {/* Options Button */}
-                    <Options /> {}
+                    <Link href="/options" className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
+                        Options
+                    </Link>
                 </div>
             </div>
         </>

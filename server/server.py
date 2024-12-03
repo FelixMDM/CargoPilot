@@ -1,5 +1,5 @@
-# from flask import Flask, jsonify
-# from flask_cors import CORS
+from flask import Flask, jsonify
+from flask_cors import CORS
 import heapq
 import copy
 
@@ -10,9 +10,16 @@ import copy
 # LINUX/UNIX: virutalenv venv -> source venv/bin/activate
 
 # # to kill venv process: deactivate
-# app = Flask(__name__)
-# CORS(app)
 
+# BELOW ARE 
+# 1. Process functions (balance, load/unload)
+#   IN: Manifest grid read_manifest.py
+#   OUT: Formatted list of ship "states" to be iterated over in process by FE components
+# 2. Routes to handle call to balance 
+#   IN: NA (Route called on 'some' event (corresponding action))
+#   OUT: Returns the value of 'func corresponding event()', whether that is a call to balance, load, etc
+
+# test grid
 grid = [[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -21,12 +28,8 @@ grid = [[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-# /api/home
-# @app.route("/api/home", methods=['GET'])
-# def return_home():
-#     return jsonify({
-#         'message': "Testing Testing Testing",
-#     })
+
+# begin funcs
 def canBalance(grid):
     return True
 def balance(grid):
@@ -99,7 +102,15 @@ def balance(grid):
                     
     return None
 
+# begin routes
+app = Flask(__name__)
+CORS(app)
 
+@app.route("/api/home", methods=['GET'])
+def return_home():
+    return jsonify({
+        'message': "Testing Testing Testing",
+    })
 
 if __name__ == "__main__":
     print("hello world")

@@ -1,6 +1,11 @@
+import ContainersPanel from "@/components/containers/ContainersPanel";
 
 const page = () => {
-    return <div>balance</div>
+    return (
+        <div>
+            <ContainersPanel />
+        </div>
+    );
 }
 
 export default page;

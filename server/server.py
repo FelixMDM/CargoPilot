@@ -31,6 +31,32 @@ grid = [[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
 # begin funcs
+def hueristicBalance(grid):
+    leftSum = 0
+    rightSum = 0
+    right = []
+    left = []
+    for i in range(6):
+        for j in range(8):
+            leftSum += grid[j][i]
+            rightSum += grid[j][i + 6]
+            if grid[j][i] > 0:
+                left += (grid[j][i], j, i)
+            if grid[j][i + 6] > 0:
+                right += (grid[j][i + 6], j, i + 6)
+    right.sort(reverse=True)
+    left.sort(reverse=True)
+    delta = abs(rightSum - leftSum)
+    imbalance = delta / max(leftSum, rightSum)
+    if imbalance < 0.1:
+        return 0
+    if(leftSum > rightSum):
+        print("test")
+        for container in left:
+            if imbalance - container[0] > 0 or abs((rightSum + container[0]) - (leftSum - container[0])) / max((leftSum - container[0])):
+                pass
+
+    
 def canBalance(grid):
     return True
 def balance(grid):
@@ -46,61 +72,53 @@ def balance(grid):
     count = 0
     while(heap):
         count += 1
-        curr = heapq.heappop(heap)
-        topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
+        curr_cost, curr_grid, path = heapq.heappop(heap)
         if(count % 100 == 0):
-            print(curr[0])
+                    print(curr_cost)
+        topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
         left = 0
         right = 0
         for i in range(6):
             for j in range(8):
-                if curr[1][j][i]:
-                    topContainers[i] = curr[1][j][i]
-                if curr[1][j][i + 6]:
-                    topContainers[i + 6] = curr[1][j][i + 6]
-                left += curr[1][j][i]
-                right += curr[1][j][i + 6]
+                if curr_grid[j][i]:
+                    topContainers[i] = j
+                if curr_grid[j][i + 6]:
+                    topContainers[i + 6] = j
+                left += curr_grid[j][i]
+                right += curr_grid[j][i + 6]
         if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
             # balanced
-            return curr
+            return curr_cost, curr_grid, path
         for i in range(12):
             if topContainers[i] == -1:
                 continue
-            index = topContainers[i]
-            # for l in range(8):
-            #     if curr[1][l][i]:
-            #         continue
-            #     index = l
-            #     break
-            maxValue = 0
-            if(index == 0):
+            index = topContainers[i] # this is the row index of the highest container in column i
+            maxValue = -1
+            if(index == -1):
                 continue
             for j in range(12):
                 if j == i:
-                    maxValue = 0
+                    maxValue = -1
                     continue
-                if topContainers[j] == -1:
+                if topContainers[j] == 7:
                     continue
-                if topContainers[j] > maxValue:
-                    maxValue = topContainers[j]
+                if topContainers[j] >= maxValue:
+                    maxValue = topContainers[j] + 1
                 cost = 0
-                k = topContainers[j]
+                k = topContainers[j] # this is the row index of the highest container in column j
+                k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
                 if(maxValue < index or maxValue < k):
                     cost = max(index, k) - index + max(index, k) - k + abs(j - i)
                 else:
-                    cost = maxValue + 1 - index + maxValue - k + abs(j - i)
-                newgrid = copy.deepcopy(grid)
-                newgrid[k][j] = newgrid[index - 1][i]
-                newgrid[index - 1][i] = 0
-                heapq.heappush(heap, (curr[0] + cost, newgrid))
-                # for k in range(8):
-                #     if(curr[1][k][j]):
-                #         continue
-                #     if k > maxValue:
-                #         maxValue = k
-                #     # calculate cost to move one from i to on in j
-      
-                    
+                    cost = maxValue - index + maxValue - k + abs(j - i)
+                if(cost < 0):
+                    print("NEGATIVE!!!!!!!")
+                    return None
+                newgrid = copy.deepcopy(curr_grid)
+                newgrid[k][j] = newgrid[index][i]
+                newgrid[index][i] = 0
+                heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(index, i, k, j)]))
+                
     return None
 
 # begin routes
@@ -128,8 +146,10 @@ def return_home():
     })
 
 if __name__ == "__main__":
-    # print("hello world")
-    # solution = balance(grid)
-    # print("goodbye world")
-    # print(solution[0])
-    app.run(debug=True, port=8080)
+    print("hello world")
+    solution = balance(grid)
+    print("goodbye world")
+    print(solution[0])
+    print(solution[2])
+    print(solution[1])
+    # app.run(debug=True, port=8080)

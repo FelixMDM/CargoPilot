@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import heapq
 import copy
@@ -126,6 +127,11 @@ def return_home():
     return jsonify({
         'message': "Placeholder",
     })
+
+@app.route("/upload", methods = ["POST"])
+def upload_manifest():
+    file = request.files['file']
+   #  manifest = 
 
 if __name__ == "__main__":
     # print("hello world")

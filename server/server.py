@@ -131,7 +131,12 @@ def return_home():
 @app.route("/upload", methods = ["POST"])
 def upload_manifest():
     file = request.files['file']
-   #  manifest = 
+    manifest = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    # log(filename + ' was uploaded to the system.') - log function needs to be created
+    return jsonify ({
+        'message': "Placeholder",
+    })
+
 
 if __name__ == "__main__":
     # print("hello world")

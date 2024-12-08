@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import heapq
 import copy
+# from read_mainfest import read_manifest
 
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
@@ -98,7 +99,7 @@ def balance(grid):
                 #     if k > maxValue:
                 #         maxValue = k
                 #     # calculate cost to move one from i to on in j
-                    
+      
                     
     return None
 
@@ -106,15 +107,29 @@ def balance(grid):
 app = Flask(__name__)
 CORS(app)
 
-@app.route("/api/home", methods=['GET'])
+# api route to parse input
+@app.route("/test", methods=['GET'])
+def read_input():
+    return jsonify({
+        'message': "Placeholder Message",
+    })
+
+# api route to call balance function
+@app.route("/balance", methods=['GET'])
+def do_balance():
+    return jsonify({
+        'message': "Placeholder",
+    })
+# api route to call load or unload function
+@app.route("/loadUnload", methods=['GET'])
 def return_home():
     return jsonify({
-        'message': "Testing Testing Testing",
+        'message': "Placeholder",
     })
 
 if __name__ == "__main__":
-    print("hello world")
-    solution = balance(grid)
-    print("goodbye world")
-    print(solution[0])
-    # app.run(debug=True, port=8080)
+    # print("hello world")
+    # solution = balance(grid)
+    # print("goodbye world")
+    # print(solution[0])
+    app.run(debug=True, port=8080)

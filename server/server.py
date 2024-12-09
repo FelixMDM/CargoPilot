@@ -2,8 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import heapq
 import copy
-# from read_mainfest import read_manifest
-
+import read_manifest
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
 # Windows user might be barred from creating venv; run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -129,7 +128,7 @@ CORS(app)
 @app.route("/test", methods=['GET'])
 def read_input():
     return jsonify({
-        'message': "Placeholder Message",
+        'message': "h Message",
     })
 
 # api route to call balance function
@@ -146,10 +145,15 @@ def return_home():
     })
 
 if __name__ == "__main__":
-    print("hello world")
-    solution = balance(grid)
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
-    # app.run(debug=True, port=8080)
+    # grid = read_manifest.read_manifest("./ShipCase1.txt")
+    # for row in range(8):
+    #     for col in range(12):
+    #         grid[row][col].print_container()
+
+    # print("hello world")
+    # solution = balance(grid)
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
+    app.run(debug=True, port=8080)

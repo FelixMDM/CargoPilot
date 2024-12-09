@@ -1,8 +1,11 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 import heapq
 import copy
+
+from read_mainfest import read_manifest
+
 # from read_mainfest import read_manifest
 
 # app instance
@@ -131,10 +134,16 @@ def return_home():
 @app.route("/upload", methods = ["POST"])
 def upload_manifest():
     file = request.files['file']
-    manifest = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-    # log(filename + ' was uploaded to the system.') - log function needs to be created
+    manifest = os.path.join(app.config['???'], file.filename)
+    file.save(manifest)
+    session['filePath'] = manifest
+
+    #log(filename + ' was uploaded to the system.') - log function needs to be created
+
+    containers = read_manifest(manifest)
+
     return jsonify ({
-        'message': "Placeholder",
+        'data': containers,
     })
 
 

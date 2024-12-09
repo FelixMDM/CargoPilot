@@ -13,8 +13,8 @@ import copy
 # app = Flask(__name__)
 # CORS(app)
 
-grid = [[2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+grid = [[2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -37,19 +37,41 @@ def hueristicBalance(grid):
             leftSum += grid[j][i]
             rightSum += grid[j][i + 6]
             if grid[j][i] > 0:
-                left += (grid[j][i], j, i)
+                left += [(grid[j][i], j, i)]
             if grid[j][i + 6] > 0:
-                right += (grid[j][i + 6], j, i + 6)
+                right += [(grid[j][i + 6], j, i + 6)]
     right.sort(reverse=True)
     left.sort(reverse=True)
     delta = abs(rightSum - leftSum)
     imbalance = delta / max(leftSum, rightSum)
+    cost = 0
     if imbalance < 0.1:
         return 0
     if(leftSum > rightSum):
-        print("test")
-        for container in left:
-            if imbalance - container[0] > 0 or abs((rightSum + container[0]) - (leftSum - container[0])) / max((leftSum - container[0]))
+        for weight, row, collumn in left:
+            if imbalance - weight > 0:
+                imbalance -= weight
+                cost += abs(collumn - 6) + 1
+                rightSum += weight
+                leftSum -= weight
+            elif abs((rightSum + weight) - (leftSum - weight)) / max((leftSum - weight), (rightSum + weight)): # see if we can move this container to the other side 
+                cost += abs(collumn - 6) + 1
+                return cost
+            else:
+                continue
+    else:
+        for weight, row, collumn in right:
+            if imbalance - weight > 0:
+                imbalance -= weight
+                cost += abs(collumn - 6) + 1
+                rightSum -= weight
+                leftSum += weight
+            elif abs((leftSum + weight) - (rightSum - weight)) / max((rightSum - weight), (leftSum + weight)): # see if we can move this container to the other side 
+                cost += abs(collumn - 6) + 1
+                return cost
+            else:
+                continue
+    return cost
 
     
 def canBalance(grid):
@@ -63,11 +85,11 @@ def balance(grid):
         # if goal break
         # for each possible move, add it to the queue.
     heap = []
-    heapq.heappush(heap, (0, grid, []))
+    heapq.heappush(heap, (0, grid, [], 0))
     count = 0
     while(heap):
         count += 1
-        curr_cost, curr_grid, path = heapq.heappop(heap)
+        hCost, curr_grid, path, curr_cost = heapq.heappop(heap)
         if(count % 100 == 0):
                     print(curr_cost)
         topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
@@ -112,15 +134,73 @@ def balance(grid):
                 newgrid = copy.deepcopy(curr_grid)
                 newgrid[k][j] = newgrid[index][i]
                 newgrid[index][i] = 0
-                heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(index, i, k, j)]))
+                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost))
                 
     return None
+
+def loadUnload(grid, toUnload, toLoad, cranePosition):
+    heap = []
+    heapq.heappush(heap, (0, grid, [], 0, toLoad, toUnload))
+    count = 0
+    while(heap):
+        count += 1
+        hCost, curr_grid, path, curr_cost, load, unload = heapq.heappop(heap)
+        if(count % 100 == 0):
+                    print(curr_cost)
+        topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
+        for i in range(6):
+            for j in range(8):
+                if curr_grid[j][i]:
+                    topContainers[i] = j
+                if curr_grid[j][i + 6]:
+                    topContainers[i + 6] = j
+
+        if(load == 0 and unload.len() == 0):
+            # finished
+            return curr_cost, curr_grid, path
+        for i in range(12):
+            if topContainers[i] == -1:
+                continue
+            index = topContainers[i] # this is the row index of the highest container in column i
+            maxValue = -1
+            if(index == -1):
+                continue
+            for j in range(12):
+                if j == i:
+                    maxValue = -1
+                    continue
+                if topContainers[j] == 7:
+                    continue
+                if topContainers[j] >= maxValue:
+                    maxValue = topContainers[j] + 1
+                cost = 0
+                k = topContainers[j] # this is the row index of the highest container in column j
+                k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
+                if(maxValue < index or maxValue < k):
+                    cost = max(index, k) - index + max(index, k) - k + abs(j - i)
+                else:
+                    cost = maxValue - index + maxValue - k + abs(j - i)
+                if(cost < 0):
+                    print("NEGATIVE!!!!!!!")
+                    return None
+                newgrid = copy.deepcopy(curr_grid)
+                newgrid[k][j] = newgrid[index][i]
+                newgrid[index][i] = 0
+                heapq.heappush(heap, (curr_cost + cost, newgrid, path + [(index, i, k, j)], curr_cost + cost))
+            #unload i as well
+            # cost is 2 from buffer to truck, 4 from ship to bufer, and whatever the cost inside the ship is(collum + 8 - row)
+            newgrid = copy.deepcopy(curr_grid)
+            cost = i + 8 - topContainers[i] + 6
+            newgrid[topContainers[i]][i] = 0
+    return None
+
 
 
 
 if __name__ == "__main__":
     print("hello world")
     solution = balance(grid)
+    print(hueristicBalance(grid))
     print("goodbye world")
     print(solution[0])
     print(solution[2])

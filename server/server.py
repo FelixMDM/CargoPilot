@@ -150,7 +150,16 @@ def return_home():
     })
 
 @app.route("/uploadManifest", methods = ["POST"])
-def upload_manifest():
+def upload_mainfest():
+    manifest = request.files['manifest']
+    manifest_path = "./manifests/" + manifest.filename
+    manifest.save(manifest_path)
+
+    return jsonify ({
+        'message': "uploadManifest endpoint called",
+    })
+
+# def upload_manifest():
     # file = request.files['file']
     # manifest = os.path.join(app.config['???'], file.filename)
     # file.save(manifest)
@@ -159,11 +168,6 @@ def upload_manifest():
     #log(filename + ' was uploaded to the system.') - log function needs to be created
 
     # containers = read_manifest(manifest)
-
-    return jsonify ({
-        'message': "uploadManifest endpoint called",
-    })
-
 
 if __name__ == "__main__":
     print("hello world")

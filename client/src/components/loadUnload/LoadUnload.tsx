@@ -13,21 +13,14 @@
 const LoadUnload = () => {
     return (
         <div className="flex flex-col font-archivo-narrow font-bold space-y-2 items-center">
-            <div className="flex flex-row w-full bg-slate-100 space-x-2 text-xl">
-                <div className="text-black bg-slate-400 rounded-2xl m-2 p-4 cursor-pointer hover:text-white">
-                    Load
-                </div>
-                <div className="text-black bg-slate-400 rounded-2xl m-2 p-4 cursor-pointer hover:text-white">
-                    Unload
-                </div>
-            </div>
-            <div className="flex flex-col w-[80%] items-center border-2 border-slate-400">
-                <div className="w-full grid grid-cols-12 grid-rows-8 gap-4 m-3 text-center">
-                    {Array.from({ length: 96 }).map((_, index: number) => (
-                        <div key={index} className="cell m-auto">
-                            {String(index % 12 + 1)}
-                        </div>
-                    ))}
+            <div className="top-0 w-full bg-slate-100 font-archivo-narrow text-2xl font-bold z-40">
+                <div className="flex justify-between items-center p-4">
+                    <div className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
+                        Load
+                    </div>
+                    <div className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
+                        Unload
+                    </div>
                 </div>
             </div>
         </div>

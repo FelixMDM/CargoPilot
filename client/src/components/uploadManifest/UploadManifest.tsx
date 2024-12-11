@@ -36,8 +36,10 @@ const UploadManifest = () => {
     const handleFileChange = function (e: React.ChangeEvent<HTMLInputElement>) {
         const filelist = e.target.files;
         if (!filelist) return;
-
-        setFile((filelist[0]));
+    
+        const selectedFile = filelist[0];
+        console.log("Selected File:", selectedFile);
+        setFile(selectedFile);
     }
 
     // Handle the form submission (sending the file to the server)
@@ -47,16 +49,28 @@ const UploadManifest = () => {
             return;
         }
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("manifest", file);
+        
+        console.log("Sending file:", file.name);
+        
         try {
-            const response = await fetch("http://localhost:8080/test", {
+            const response = await fetch("http://localhost:8080/uploadManifest", {
                 method: "POST",
                 body: formData,
             });
+            
+            console.log("Response status:", response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Error response:", errorText);
+                throw new Error(errorText || 'Upload failed');
+            }
+            
             const result = await response.json();
-            alert(result.message); // Show the server response message
+            alert(result.message);
         } catch (error) {
-            console.log("Error uploading the file:", error);
+            console.error("Full error details:", error);
             alert("There was an error uploading the file.");
         }
     };

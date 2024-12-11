@@ -159,21 +159,13 @@ def upload_mainfest():
         'message': "uploadManifest endpoint called",
     })
 
-# def upload_manifest():
-    # file = request.files['file']
-    # manifest = os.path.join(app.config['???'], file.filename)
-    # file.save(manifest)
-    # session['filePath'] = manifest
-
-    #log(filename + ' was uploaded to the system.') - log function needs to be created
-
-    # containers = read_manifest(manifest)
-
 if __name__ == "__main__":
+    
     # print("hello world")
     # solution = balance(grid)
     # print("goodbye world")
     # print(solution[0])
     # print(solution[2])
     # print(solution[1])
+
     app.run(debug=True, port=8080)

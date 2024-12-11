@@ -4,7 +4,7 @@ from flask_cors import CORS
 import heapq
 import copy
 
-from read_mainfest import read_manifest
+# import read_mainfest
 
 # from read_mainfest import read_manifest
 
@@ -170,10 +170,10 @@ def upload_mainfest():
     # containers = read_manifest(manifest)
 
 if __name__ == "__main__":
-    print("hello world")
-    solution = balance(grid)
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
-    # app.run(debug=True, port=8080)
+    # print("hello world")
+    # solution = balance(grid)
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
+    app.run(debug=True, port=8080)

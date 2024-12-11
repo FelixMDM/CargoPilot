@@ -1,5 +1,6 @@
 'use client';
 
+import React from "react";
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import Link from 'next/link';
 const UploadManifest = () => {
     const [isUploaded, setIsUploaded] = useState(false);
     const [dynamicLink, setDynamicLink] = useState('');
-    const [file, setFile] = useState(null);
+    const [file, setFile] = React.useState<File>();
     const searchParams = useSearchParams();
 
     //url redirect so can decide if it proceeds to load unload or balance
@@ -32,9 +33,12 @@ const UploadManifest = () => {
     };
 
     // Handle file selection
-    const handleFileChange = () => {
-        // setFile(event.target.files[0]);
-    };
+    const handleFileChange = function (e: React.ChangeEvent<HTMLInputElement>) {
+        const filelist = e.target.files;
+        if (!filelist) return;
+
+        setFile((filelist[0]));
+    }
 
     // Handle the form submission (sending the file to the server)
     const handleSubmit = async () => {
@@ -45,14 +49,14 @@ const UploadManifest = () => {
         const formData = new FormData();
         formData.append("file", file);
         try {
-            const response = await fetch("/upload", {
+            const response = await fetch("http://localhost:8080/test", {
                 method: "POST",
                 body: formData,
             });
             const result = await response.json();
             alert(result.message); // Show the server response message
         } catch (error) {
-            console.error("Error uploading the file:", error);
+            console.log("Error uploading the file:", error);
             alert("There was an error uploading the file.");
         }
     };

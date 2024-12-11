@@ -45,7 +45,7 @@ const UploadManifest = () => {
                     <p className="text-green-500">Manifest Uploaded Successfully!</p>
                     <Link 
                         href={dynamicLink}
-                        className="w-[300px] p-4 m-2 bg-blue-600 rounded-2xl hover:text-white"
+                        className="absolute top-[464px] left-[550px] w-[300px] p-4 m-2 bg-blue-600 rounded-2xl hover:text-white"
                     >
                         Proceed
                     </Link>

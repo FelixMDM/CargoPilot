@@ -1,7 +1,11 @@
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 import heapq
 import copy
+
+# import read_mainfest
+
 # from read_mainfest import read_manifest
 
 # app instance
@@ -145,11 +149,23 @@ def return_home():
         'message': "Placeholder",
     })
 
+@app.route("/uploadManifest", methods = ["POST"])
+def upload_mainfest():
+    manifest = request.files['manifest']
+    manifest_path = "./manifests/" + manifest.filename
+    manifest.save(manifest_path)
+
+    return jsonify ({
+        'message': "uploadManifest endpoint called",
+    })
+
 if __name__ == "__main__":
-    print("hello world")
-    solution = balance(grid)
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
-    # app.run(debug=True, port=8080)
+    
+    # print("hello world")
+    # solution = balance(grid)
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
+
+    app.run(debug=True, port=8080)

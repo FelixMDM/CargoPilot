@@ -13,12 +13,12 @@ import copy
 # app = Flask(__name__)
 # CORS(app)
 
-grid = [[2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+grid = [[2, 2, 9, 1.1, 5, 5, 7, 7, 8, 8, 1, 1],
+        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 9, 3],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1.2],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 3],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 # /api/home
@@ -56,7 +56,7 @@ def hueristicBalance(grid):
                 leftSum -= weight
             elif abs((rightSum + weight) - (leftSum - weight)) / max((leftSum - weight), (rightSum + weight)): # see if we can move this container to the other side 
                 cost += abs(collumn - 6) + 1
-                return cost
+                return cost * 2
             else:
                 continue
     else:
@@ -68,7 +68,7 @@ def hueristicBalance(grid):
                 leftSum += weight
             elif abs((leftSum + weight) - (rightSum - weight)) / max((rightSum - weight), (leftSum + weight)): # see if we can move this container to the other side 
                 cost += abs(collumn - 6) + 1
-                return cost
+                return cost * 2
             else:
                 continue
     return cost
@@ -87,9 +87,14 @@ def balance(grid):
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
+    visited = set()
     while(heap):
         count += 1
         hCost, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
+        gridTuple = tuple(tuple(row) for row in curr_grid)
+        if gridTuple in visited:
+            continue
+        visited.add(gridTuple)
         if(count % 100 == 0):
                     print(curr_cost)
         topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
@@ -112,6 +117,16 @@ def balance(grid):
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
+            craneCost = 0
+            if i == pos[1]:
+                maxToContainer = -1
+                craneCost = pos[0] - index
+                if index == pos[0]:
+                    craneCost = 0
+            elif(maxToContainer < index or maxToContainer < pos[0]):
+                craneCost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
+            else:
+                craneCost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
             cost = 0
             if topContainers[i] >= maxToContainer:
                 maxToContainer = topContainers[i] + 1
@@ -128,19 +143,10 @@ def balance(grid):
                     maxFromContainer = topContainers[j] + 1
                 k = topContainers[j] # this is the row index of the highest container in column j
                 k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
-                if i == pos[1]:
-                    maxToContainer = -1
-                    cost = pos[0] - index
-                    if index == pos[0]:
-                        cost = 0
-                elif(maxToContainer < index or maxToContainer < pos[0]):
-                    cost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
-                else:
-                    cost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
                 if(maxFromContainer < index or maxFromContainer < k):
-                    cost += max(index, k) - index + max(index, k) - k + abs(j - i)
+                    cost = max(index, k) - index + max(index, k) - k + abs(j - i) + craneCost
                 else:
-                    cost += maxFromContainer - index + maxFromContainer - k + abs(j - i)
+                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i) + craneCost
                 if(cost < 0):
                     print("NEGATIVE!!!!!!!")
                     return None
@@ -178,14 +184,16 @@ def loadUnload(grid, toUnload, toLoad, craneDocked):
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
+            craneCost = 0
             if i == pos[1]:
                 maxToContainer = -1
-            if topContainers[i] > maxToContainer:
-                maxToContainer = topContainers[i]
-            if(maxToContainer < index or maxToContainer < pos[0]):
-                cost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
+                craneCost = pos[0] - index
+                if index == pos[0]:
+                    craneCost = 0
+            elif(maxToContainer < index or maxToContainer < pos[0]):
+                craneCost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
             else:
-                cost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
+                craneCost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
             # now we have the baseline cost to get from wherever the container was before to the container we are trying to move
             maxFromContainer = -1
             if(index == -1):
@@ -202,9 +210,9 @@ def loadUnload(grid, toUnload, toLoad, craneDocked):
                 k = topContainers[j] # this is the row index of the highest container in column j
                 k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
                 if(maxFromContainer < index or maxFromContainer < k):
-                    cost = max(index, k) - index + max(index, k) - k + abs(j - i)
+                    cost = max(index, k) - index + max(index, k) - k + abs(j - i) + craneCost
                 else:
-                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i)
+                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i) + craneCost
                 if(cost < 0):
                     print("NEGATIVE!!!!!!!")
                     return None
@@ -213,7 +221,7 @@ def loadUnload(grid, toUnload, toLoad, craneDocked):
                 newgrid[index][i] = 0
                 if(craneDocked):
                     cost += 2
-                heapq.heappush(heap, (curr_cost + cost, newgrid, path + [(index, i, k, j)], curr_cost + cost))
+                heapq.heappush(heap, (curr_cost + cost, newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
             #unload i as well
             # cost is 2 from ship to truck and whatever the cost inside the ship is(collum + 8 - row)
             if(curr_grid[topContainers[i]][i] in unload):
@@ -228,7 +236,7 @@ def loadUnload(grid, toUnload, toLoad, craneDocked):
                 if(topContainers[i] < 7):
                     newgrid = copy.deepcopy(curr_grid)
                     cost = i + 8 - topContainers[i] + 2
-                    newgrid[topContainers[i] + 1][i] = -1
+                    newgrid[topContainers[i] + 1][i] = -1 #give a unique id
                     if(not craneDocked):
                        cost += 2
                     heapq.heappush(heap, (curr_cost + cost, newgrid, path + [(index, i, k, j)], curr_cost + cost))

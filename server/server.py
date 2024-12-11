@@ -1,10 +1,10 @@
-import os
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 import heapq
 import copy
-
-# import read_mainfest
+from utils.logger import server_logger
+import os
+from datetime import datetime
 
 # from read_mainfest import read_manifest
 
@@ -129,25 +129,69 @@ def balance(grid):
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/log", methods=['POST'])
+def log_message():
+    try:
+        data = request.json
+        level = data.get('level', 'info')
+        message = f"{data.get('component')}: {data.get('message')}"
+        
+        if level == 'error':
+            server_logger.error(message)
+        elif level == 'warning':
+            server_logger.warning(message)
+        else:
+            server_logger.info(message)
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        server_logger.error(f"Error processing log message: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/download-logs", methods=['GET'])
+def download_logs():
+    try:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.log')
+        
+        if os.path.exists(log_file):
+            return send_file(
+                log_file,
+                mimetype='text/plain',
+                as_attachment=True,
+                download_name=f"cargopilot-logs-{date_str}.log"
+            )
+        return jsonify({'error': 'Log file not found'}), 404
+    except Exception as e:
+        server_logger.error(f"Error downloading logs: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
 # api route to parse input
 @app.route("/test", methods=['GET'])
 def read_input():
-    return jsonify({
-        'message': "Placeholder Message",
-    })
+    server_logger.info("Test endpoint called", remote_addr=request.remote_addr)
+    return jsonify({'message': "Placeholder Message"})
 
 # api route to call balance function
 @app.route("/balance", methods=['GET'])
 def do_balance():
-    return jsonify({
-        'message': "Placeholder",
-    })
+    try:
+        server_logger.info("Balance endpoint called", remote_addr=request.remote_addr)
+        return jsonify({'message': "Placeholder"})
+    except Exception as e:
+        server_logger.error("Balance error", error=str(e))
+        return jsonify({'error': "Balance operation failed"}), 500
+
 # api route to call load or unload function
 @app.route("/loadUnload", methods=['GET'])
 def return_home():
-    return jsonify({
-        'message': "Placeholder",
-    })
+    try:
+        server_logger.info("LoadUnload endpoint called", remote_addr=request.remote_addr)
+        return jsonify({'message': "Placeholder"})
+    except Exception as e:
+        server_logger.error("LoadUnload error", error=str(e))
+        return jsonify({'error': "Load/Unload operation failed"}), 500
+
 
 @app.route("/uploadManifest", methods = ["POST"])
 def upload_mainfest():

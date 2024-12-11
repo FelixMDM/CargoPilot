@@ -203,6 +203,27 @@ def upload_mainfest():
         'message': "uploadManifest endpoint called",
     })
 
+@app.route("/generateManifest", methods = ["POST"])
+def generate_manifest():
+    manifest = request.files['manifest']
+
+    # overwriting current data with updated data
+    manifest_path = "./manifests/" + manifest.filename
+    with open(manifest_path, 'w') as file:
+        file.write() # need data
+
+   # renaming file to inlcude OUTBOUND
+    new_name = manifest.filename.replace(".txt", "_OUTBOUND.txt")
+    new_path = os.path.join("./manifests/", new_name)
+    os.rename(manifest.filename, new_name)
+
+    # download on user's computer
+    manifest.save(new_path)
+
+    return jsonify ({
+        'message': "generateManifest endpoint called",
+    })
+
 if __name__ == "__main__":
     
     # print("hello world")

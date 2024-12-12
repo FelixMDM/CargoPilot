@@ -2,6 +2,7 @@
 # from flask_cors import CORS
 import heapq
 import copy
+import numpy as np
 
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
@@ -255,3 +256,12 @@ if __name__ == "__main__":
     print(solution[2])
     print(solution[1])
     # app.run(debug=True, port=8080)
+
+
+# TODO
+# add rest of options for load unload
+# create hueristic for load unload
+# add test to see if SIFT case
+# add buffer
+# allow to go over the top by two rows in intermediate steps
+# test

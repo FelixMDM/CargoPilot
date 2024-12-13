@@ -1,7 +1,12 @@
-# from flask import Flask, jsonify
-# from flask_cors import CORS
+from flask import Flask, jsonify, request, session, send_file
+from flask_cors import CORS
 import heapq
 import copy
+
+from utils.logger import server_logger
+import os
+from datetime import datetime
+
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
 # Windows user might be barred from creating venv; run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -9,8 +14,6 @@ import copy
 # LINUX/UNIX: virutalenv venv -> source venv/bin/activate
 
 # # to kill venv process: deactivate
-# app = Flask(__name__)
-# CORS(app)
 
 grid = [[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -20,6 +23,7 @@ grid = [[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
 unload = {"1": 3}
 load = 1
 # /api/home
@@ -28,6 +32,9 @@ load = 1
 #     return jsonify({
 #         'message': "Testing Testing Testing",
 #     })
+
+# begin funcs
+
 def hueristicBalance(grid):
     leftSum = 0
     rightSum = 0
@@ -282,8 +289,88 @@ def loadUnload(grid, toUnload, toLoad):
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
+# begin routes
+app = Flask(__name__)
+CORS(app)
+
+@app.route("/log", methods=['POST'])
+def log_message():
+    try:
+        data = request.json
+        level = data.get('level', 'info')
+        message = f"{data.get('component')}: {data.get('message')}"
+        
+        if level == 'error':
+            server_logger.error(message)
+        elif level == 'warning':
+            server_logger.warning(message)
+        else:
+            server_logger.info(message)
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        server_logger.error(f"Error processing log message: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/download-logs", methods=['GET'])
+def download_logs():
+    try:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.log')
+        
+        if os.path.exists(log_file):
+            return send_file(
+                log_file,
+                mimetype='text/plain',
+                as_attachment=True,
+                download_name=f"cargopilot-logs-{date_str}.log"
+            )
+        return jsonify({'error': 'Log file not found'}), 404
+    except Exception as e:
+        server_logger.error(f"Error downloading logs: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 
+# api route to parse input
+@app.route("/test", methods=['GET'])
+def read_input():
+    server_logger.info("Test endpoint called", remote_addr=request.remote_addr)
+    return jsonify({'message': "Placeholder Message"})
+
+# api route to call balance function
+@app.route("/balance", methods=['GET'])
+def do_balance():
+    try:
+        server_logger.info("Balance endpoint called", remote_addr=request.remote_addr)
+        return jsonify({'message': "Placeholder"})
+    except Exception as e:
+        server_logger.error("Balance error", error=str(e))
+        return jsonify({'error': "Balance operation failed"}), 500
+
+# api route to call load or unload function
+@app.route("/loadUnload", methods=['GET'])
+def return_home():
+    try:
+        server_logger.info("LoadUnload endpoint called", remote_addr=request.remote_addr)
+        return jsonify({'message': "Placeholder"})
+    except Exception as e:
+        server_logger.error("LoadUnload error", error=str(e))
+        return jsonify({'error': "Load/Unload operation failed"}), 500
+
+
+@app.route("/uploadManifest", methods = ["POST"])
+def upload_mainfest():
+    try:
+        manifest = request.files['manifest']
+        manifest_path = "./manifests/" + manifest.filename
+        manifest.save(manifest_path)
+        server_logger.info("Upload manifest endpoint called", 
+                          remote_addr=request.remote_addr,
+                          filename=manifest.filename)
+        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
+    except Exception as e:
+        server_logger.error("Upload manifest error", error=str(e))
+        return jsonify({'error': "Upload operation failed"}), 500
+      
 
 if __name__ == "__main__":
     print("hello world")
@@ -294,14 +381,6 @@ if __name__ == "__main__":
     print(solution[0])
     print(solution[2])
     print(solution[1])
-    
-    # app.run(debug=True, port=8080)
 
+    app.run(debug=True, port=8080)
 
-# TODO
-# add rest of options for load unload
-# create hueristic for load unload
-# add test to see if SIFT case
-# add buffer
-# allow to go over the top by two rows in intermediate steps
-# test

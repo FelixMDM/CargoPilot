@@ -1,6 +1,11 @@
+import Options from '@/components/options/Options';
 
-const page = () => {
-    return <div>options</div>
-}
+const OptionsPage = () => {
+    return (
+        <div>
+            <Options />
+        </div>
+    );
+};
 
-export default page;
+export default OptionsPage;

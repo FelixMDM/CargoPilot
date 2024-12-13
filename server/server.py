@@ -164,7 +164,7 @@ def hueristicLoad(grid, toUnload, toLoad):
         return 0
     if(not toUnload):
         return 4 * toLoad
-    unload = copy.deepcopy(toUnload)
+    unload = toUnload.copy()
     unloadCosts = []
     for i in range(len(grid)):
         for j in range(len(grid[0])):
@@ -195,7 +195,7 @@ def loadUnload(grid, toUnload, toLoad):
     while(heap):
         count += 1
         hCost, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
-        unload = copy.deepcopy(toUnload)
+        unload = toUnload.copy()
         gridTuple = tuple(tuple(row) for row in curr_grid)
         if gridTuple in visited:
             continue
@@ -274,7 +274,7 @@ def loadUnload(grid, toUnload, toLoad):
                 if(craneDocked):
                     cost += 2
                 # remove from unload
-                newUnload = copy.deepcopy(unload)
+                newUnload = unload.copy()
                 newUnload[str((curr_grid[topContainers[i]][i]))] -= 1
                 if(newUnload[str((curr_grid[topContainers[i]][i]))] == 0):
                     del newUnload[str((curr_grid[topContainers[i]][i]))]

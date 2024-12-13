@@ -52,6 +52,8 @@ def read_manifest(input_file):
         for col in range(12):
             grid[row][col].print_container()
 
+    return grid
+
 def main():
     filename = "ShipCase1.txt"
     read_manifest(filename)

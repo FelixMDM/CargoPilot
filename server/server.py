@@ -300,6 +300,21 @@ def loadUnload(grid, toUnload, toLoad):
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
+def cellsToUnloadFile(selected_cells):
+    file_path = "cellsToUnload.txt"
+
+    # Check if the file exists and delete it
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"{file_path} exists and was deleted.")
+
+    # Write to a new file
+    with open(file_path, "w") as file:
+        for cell in selected_cells:
+            file.write(cell + "\n")
+
+    print("Unload clicked and data saved to cellsToUnload.txt")
+
 # begin routes
 app = Flask(__name__)
 CORS(app)
@@ -399,13 +414,36 @@ def upload_mainfest():
         server_logger.error("Upload manifest error", error=str(e))
         return jsonify({'error': "Upload operation failed"}), 500
 
-@app.route("/unloadAction", methods = ["POST"])
+@app.route("/unloadAction", methods=["POST"])
 def unload_action():
     data = request.get_json()
 
-    print("Unload clicked")
+    if not data or "selectedCells" not in data:
+        return jsonify({"message": "No cells provided"}), 400
 
-    return jsonify({"message": "Unload action received"}), 200
+    selected_cells = data["selectedCells"]
+
+    # Send confirmation message first
+    confirmation = f"Confirm: Unload {len(selected_cells)} containers"
+    print(confirmation)
+
+    # Return confirmation to the client
+    return jsonify({"message": confirmation}), 200
+
+@app.route("/confirmUnload", methods=["POST"])
+def confirm_unload():
+    data = request.get_json()
+
+    if not data or "selectedCells" not in data:
+        return jsonify({"message": "No cells provided"}), 400
+
+    selected_cells = data["selectedCells"]
+
+    # Proceed to write to the file after confirmation
+    cellsToUnloadFile(selected_cells)
+
+    return jsonify({"message": "Unload action completed and data saved"}), 200
+
 
 if __name__ == "__main__":
     # print("hello world")

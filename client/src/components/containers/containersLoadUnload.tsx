@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
-import numberToString from "../loadUnload/numToString"; // Import the function
+import React from "react";
+import { useSelectedCells } from "../loadUnload/SelectedCellsContext";
+import numberToString from "../loadUnload/numToString";
 
 const Containers = () => {
-  // State to store selected cell positions
-  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const { selectedCells, setSelectedCells } = useSelectedCells();
 
   // Function to handle cell selection
   const handleCellClick = (row: number, col: number, index: number) => {
@@ -25,20 +25,19 @@ const Containers = () => {
     <div className="flex flex-col items-center">
       <div className="grid grid-cols-12 grid-rows-8">
         {Array.from({ length: 96 }).map((_, index: number) => {
-          // Calculate row and column for each cell
           const col = index % 12;
-          const row = 7 - Math.floor(index / 12); // Reverse the row calculation to start from bottom (7 - index)
+          const row = 7 - Math.floor(index / 12);
 
-          const cellId = `${index}, (${row}, ${col})`; // Unique ID for each cell with index and (x, y)
-          const isSelected = selectedCells.has(cellId); // Check if the cell is selected
+          const cellId = `${index}, (${row}, ${col})`;
+          const isSelected = selectedCells.has(cellId);
 
           return (
             <button
               key={index}
-              className={`cell m-auto p-2 border border-black ${isSelected ? 'bg-green-500' : 'bg-gray-300'}`}
-              onClick={() => handleCellClick(row, col, index)} // Pass index to handle click
+              className={`cell m-auto p-2 border border-black ${isSelected ? "bg-green-500" : "bg-gray-300"}`}
+              onClick={() => handleCellClick(row, col, index)}
             >
-              {numberToString(index)}  {/* just printing value as numerical value, this tsx can handle printing the titles to the grid*/} 
+              {numberToString(index)}
             </button>
           );
         })}

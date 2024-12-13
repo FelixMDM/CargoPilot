@@ -312,13 +312,17 @@ def return_home():
 
 @app.route("/uploadManifest", methods = ["POST"])
 def upload_mainfest():
-    manifest = request.files['manifest']
-    manifest_path = "./manifests/" + manifest.filename
-    manifest.save(manifest_path)
-
-    return jsonify ({
-        'message': "uploadManifest endpoint called",
-    })
+    try:
+        manifest = request.files['manifest']
+        manifest_path = "./manifests/" + manifest.filename
+        manifest.save(manifest_path)
+        server_logger.info("Upload manifest endpoint called", 
+                          remote_addr=request.remote_addr,
+                          filename=manifest.filename)
+        return jsonify({'message': "Placeholder"})
+    except Exception as e:
+        server_logger.error("Upload manifest error", error=str(e))
+        return jsonify({'error': "Upload operation failed"}), 500
 
 
 if __name__ == "__main__":

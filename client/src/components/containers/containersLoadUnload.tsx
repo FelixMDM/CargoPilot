@@ -38,21 +38,11 @@ const Containers = () => {
               className={`cell m-auto p-2 border border-black ${isSelected ? 'bg-green-500' : 'bg-gray-300'}`}
               onClick={() => handleCellClick(row, col, index)} // Pass index to handle click
             >
-              {numberToString(index)}  {/* Display index as a word */}
+              {numberToString(index)}  {/* just printing value as numerical value, this tsx can handle printing the titles to the grid*/} 
             </button>
           );
         })}
       </div>
-
-      {/* Display selected cells at the bottom */}
-      {selectedCells.size > 0 && (
-        <div className="mt-4">
-          <p>Selected Positions:</p>
-          {Array.from(selectedCells).map((cellId) => {
-            return <p key={cellId}>{cellId}</p>; // Display the stored cellId
-          })}
-        </div>
-      )}
     </div>
   );
 };

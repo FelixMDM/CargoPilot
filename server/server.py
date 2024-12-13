@@ -398,7 +398,14 @@ def upload_mainfest():
     except Exception as e:
         server_logger.error("Upload manifest error", error=str(e))
         return jsonify({'error': "Upload operation failed"}), 500
-      
+
+@app.route("/unloadAction", methods = ["GET"])
+def unload_action():
+    data = request.get_json()
+
+    print("Unload clicked")
+
+    return jsonify({"message": "Unload action received"}), 200
 
 if __name__ == "__main__":
     # print("hello world")

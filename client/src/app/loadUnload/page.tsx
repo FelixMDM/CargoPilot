@@ -1,10 +1,10 @@
 import ContainersPanel from "@/components/containers/ContainersPanel";
-import LoadUnload from "@/components/loadUnload/LoadUnload";
+import Unload from "@/components/loadUnload/unload";
 
 const page = () => {
     return (
         <div>
-            <LoadUnload />
+            <Unload />
         </div>
     );
 }

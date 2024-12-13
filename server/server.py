@@ -446,6 +446,19 @@ def upload_mainfest():
         return jsonify({'error': "Upload operation failed"}), 500
       
 
+@app.route("/downloadManifest", methods=["POST","GET"])
+def downloadn_manifest():
+    try:
+        manifest_path = "./manifests/ShipCase1.txt"
+        return send_file(
+                manifest_path,
+                as_attachment=True,
+                download_name="ShipCase1.txt"
+            )
+    except Exception as e:
+        server_logger.error("Upload manifest error", error=str(e))
+        return jsonify({'error': "Upload operation failed"}), 500
+
 if __name__ == "__main__":
     # print("hello world")
     # solution = balance(grid)

@@ -75,7 +75,7 @@ def hueristicBalance(grid):
     return cost
 
     
-def canBalance(grid):
+def canBalance(grid): # first we will check if can be balanced, if so it will just return true, otherwise it will return true, and (0, 0) otherwise, false nad (leftweight, rightweight) wieghts after sift
     return True
 def balance(grid):
     # create a queue
@@ -159,6 +159,34 @@ def balance(grid):
                 
     return None
 
+def hueristicLoad(grid, toUnload, toLoad):
+    if(not toUnload and not toLoad):
+        return 0
+    if(not toUnload):
+        return 4 * toLoad
+    unload = copy.deepcopy(toUnload)
+    unloadCosts = []
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if str(grid[i][j]) in toUnload:
+                unloadCosts += [(8 - i + j + 2, i, j)]
+    unloadCosts.sort()
+    totalCost = 4 * toLoad
+    for cost, row, col in unloadCosts:
+        if(str(grid[row][col] in unload)):
+            totalCost += cost
+            unload[str(grid[row][col])] -= 1
+            if(unload[str(grid[row][col])] == 0):
+                del unload[str(grid[row][col])]
+                if(not unload):
+                    return totalCost
+            if(not toLoad):
+                totalCost += 2
+            toLoad -= 1
+    return totalCost
+
+    
+
 def loadUnload(grid, toUnload, toLoad):
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, toLoad, toUnload, (8, 0), 1))
@@ -166,7 +194,8 @@ def loadUnload(grid, toUnload, toLoad):
     visited = set()
     while(heap):
         count += 1
-        hCost, curr_grid, path, curr_cost, load, unload, pos, craneDocked = heapq.heappop(heap)
+        hCost, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
+        unload = copy.deepcopy(toUnload)
         gridTuple = tuple(tuple(row) for row in curr_grid)
         if gridTuple in visited:
             continue
@@ -227,7 +256,7 @@ def loadUnload(grid, toUnload, toLoad):
                 newgrid[index][i] = 0
                 if(craneDocked):
                     cost += 2
-                heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(index, i, k, j)], curr_cost + cost + 1, load, unload, (k, j), False))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), newgrid, path + [(index, i, k, j)], curr_cost + cost, load, unload, (k, j), False))
             #unload i as well
             # cost is 2 from ship to truck and whatever the cost inside the ship is(collum + 8 - row)
             if(load):
@@ -237,7 +266,7 @@ def loadUnload(grid, toUnload, toLoad):
                     newgrid[topContainers[i] + 1][i] = 96 + toLoad - load #give a unique id
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
-                    heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost + 1, load - 1, unload, (topContainers[i] + 1, i), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
             if(str(curr_grid[topContainers[i]][i]) in unload):
                 newgrid = [row[:] for row in curr_grid]
                 cost = i + 8 - topContainers[i] + 2 + craneCost
@@ -250,7 +279,7 @@ def loadUnload(grid, toUnload, toLoad):
                 if(newUnload[str((curr_grid[topContainers[i]][i]))] == 0):
                     del newUnload[str((curr_grid[topContainers[i]][i]))]
                 
-                heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost + 1, load, newUnload, (8, 0), True))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 

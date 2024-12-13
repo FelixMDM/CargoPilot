@@ -163,8 +163,13 @@ def balance(grid):
                 newgrid[k][j] = newgrid[index][i]
                 newgrid[index][i] = 0
                 heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
-                
     return None
+
+def balanceOutput(grid, steps):
+    output = [grid]
+    for item in steps:
+        newgrid = [row[:] for row in output[-1]]
+        newgrid[]
 
 def hueristicLoad(grid, toUnload, toLoad):
     if(not toUnload and not toLoad):

@@ -319,11 +319,11 @@ def upload_mainfest():
         server_logger.info("Upload manifest endpoint called", 
                           remote_addr=request.remote_addr,
                           filename=manifest.filename)
-        return jsonify({'message': "Placeholder"})
+        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
     except Exception as e:
         server_logger.error("Upload manifest error", error=str(e))
         return jsonify({'error': "Upload operation failed"}), 500
-
+      
 
 if __name__ == "__main__":
     print("hello world")
@@ -333,4 +333,4 @@ if __name__ == "__main__":
     print(solution[0])
     print(solution[2])
     print(solution[1])
-    # app.run(debug=True, port=8080)
+    app.run(debug=True, port=8080)

@@ -6,6 +6,8 @@ import copy
 from utils.logger import server_logger
 import os
 from datetime import datetime
+import read_manifest
+from read_manifest import Container
 
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
@@ -34,6 +36,15 @@ load = 1
 #     })
 
 # begin funcs
+def manifestToGrid(gridContainerClass: list[list[Container]]):
+    # take the container class from the read manfiest function, generate a numbers only representation of this
+    numericalGrid = [[0 for _ in range(12)] for _ in range(8)]
+
+    for i in range(8):
+        for j in range(12):
+            numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
+
+    return numericalGrid
 
 def hueristicBalance(grid):
     leftSum = 0
@@ -366,11 +377,28 @@ def return_home():
 def upload_mainfest():
     try:
         manifest = request.files['manifest']
+
+        # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
         manifest_path = "./manifests/" + manifest.filename
         manifest.save(manifest_path)
-        server_logger.info("Upload manifest endpoint called", 
-                          remote_addr=request.remote_addr,
-                          filename=manifest.filename)
+
+        # pass the actual manifest file that's presumable cached into the balance function
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+        numericalGrid = manifestToGrid(containerClassGrid)
+
+        for i in range(8):
+            for j in range(12):
+                print(numericalGrid[i][j])
+            print("\n")
+
+        for i in range(8):
+            for j in range(12):
+                print(containerClassGrid[i][j].get_weight())
+            print("\n")
+
+        balance(numericalGrid)
+
+        # log to the user that the manifest was uplpoaded
         return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
     except Exception as e:
         server_logger.error("Upload manifest error", error=str(e))
@@ -378,14 +406,13 @@ def upload_mainfest():
       
 
 if __name__ == "__main__":
-    print("hello world")
+    # print("hello world")
     # solution = balance(grid)
     # print(hueristicBalance(grid))
-    solution = loadUnload(grid, unload, load)
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
 
     app.run(debug=True, port=8080)
 

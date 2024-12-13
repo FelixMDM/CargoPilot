@@ -399,7 +399,7 @@ def upload_mainfest():
         server_logger.error("Upload manifest error", error=str(e))
         return jsonify({'error': "Upload operation failed"}), 500
 
-@app.route("/unloadAction", methods = ["GET"])
+@app.route("/unloadAction", methods = ["POST"])
 def unload_action():
     data = request.get_json()
 

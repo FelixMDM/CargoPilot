@@ -1,30 +1,34 @@
+"use client";
+import { useState } from "react";
+import Containers from "../containers/containersLoadUnload";
 
-/**
- * 
- * I'm thinking that the best way to do this is gonna be yeah to map over a list of 96 to render all the grid boxes,
- * but functionally, later on down the line -> make an api call for the updated manifest/steps
- * 
- * Format is maybe a list (CSV?) of arrays [96 in len] that represent what box goes where? and each list entry is a step
- * or something close to that where only the colors are specified
- * 
- * Render the respective colors at each steps in that map loop that I have defined currently
- */
+const ContainersPanel = () => {
+    const [unload, setUnload] = useState(false);
 
-const LoadUnload = () => {
+    const handleUnload = () => {
+        setUnload(true);
+    };
+
     return (
-        <div className="flex flex-col font-archivo-narrow font-bold space-y-2 items-center">
-            <div className="top-0 w-full bg-slate-100 font-archivo-narrow text-2xl font-bold z-40">
-                <div className="flex justify-between items-center p-4">
-                    <div className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
-                        Load
-                    </div>
-                    <div className="text-black bg-slate-400 rounded-2xl p-4 m-2 hover:text-white">
-                        Unload
-                    </div>
+        <div className="flex flex-col items-center">
+            <div className="w-full bg-blue-100 text-blue-900 text-center py-4 font-bold text-xl">
+                Please select all containers to unload
+            </div>
+            
+            <div className="flex flex-row mt-[5%] justify-evenly">
+                <Containers />
+                <div className="flex flex-col w-[10%] space-y-[15%] items-center">
+                    <button 
+                        onClick={handleUnload}
+                        style={{ width: '100px', marginLeft: '47%' }} 
+                        className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white"
+                    >
+                        UNLOAD
+                    </button>
                 </div>
             </div>
         </div>
     );
-}
+};
 
-export default LoadUnload;
+export default ContainersPanel;

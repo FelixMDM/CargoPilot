@@ -56,6 +56,22 @@ def manifestToNum(gridContainerClass: list[list[Container]]):
 
     return numGrid
 
+def generateSteps(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        startR, startC = soln[i][0], soln[i][1]
+        endR, endC = soln[i][2], soln[i][3]
+        nextStep = copy.deepcopy(steps[i])
+
+        tmp = nextStep[endR][endC]
+        nextStep[endR][endC] = nextStep[startR][startC]
+        nextStep[startR][startC] = tmp
+
+        steps.append(nextStep)
+    return steps
+
 def hueristicBalance(grid):
     leftSum = 0
     rightSum = 0
@@ -401,14 +417,16 @@ def upload_mainfest():
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
             
-            simpleGrid = manifestToGrid(containerClassGrid)
-            numericalGrid = manifestToNum(containerClassGrid)
+            simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
+            numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
             print(simpleGrid)
 
-            balance(numericalGrid)
+            soln = balance(numericalGrid)
+            steps = generateSteps(soln[2], simpleGrid)
+            print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
-            return jsonify(simpleGrid)
+            return jsonify(steps)
         except Exception as e:
             server_logger.error("Error fetching manifest", error=str(e))
             return jsonify({'error': "Fetch failed for manifest"}), 500
@@ -416,12 +434,13 @@ def upload_mainfest():
 
 if __name__ == "__main__":
     # print("hello world")
-    # solution = balance(grid)
     # print(hueristicBalance(grid))
     # print("goodbye world")
-    # print(solution[0])
-    # print(solution[2])
-    # print(solution[1])
+    # solution = balance(grid)
+    # soln = solution[2]
+
+    # steps = generateSteps(soln, grid)
+    # print(steps)
 
     app.run(debug=True, port=8080)
 

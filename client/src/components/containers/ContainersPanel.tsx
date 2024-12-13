@@ -10,7 +10,7 @@ interface CommentFormElement extends HTMLFormElement {
     readonly elements: FormElements
 }
 
-type Matrix = string[]
+type Matrix = string[][]
 
 const ContainersPanel = ()  => {
     const [instruction, setInstruction] = useState<Matrix[]>([]);
@@ -50,35 +50,47 @@ const ContainersPanel = ()  => {
         setComments("");
     };
 
-    const getSteps = async () => {
-        try {
-            const response = await fetch("http://localhost:8080/uploadManifest", {
-                method: "GET",
-            });
-
-            if (!response.ok) {
-                console.log("failed/")
-                const errorText = await response.text();
-                throw new Error(errorText || 'Upload failed');
-            }
-
-            const data = await response.text();
-            const parsedData = JSON.parse(data.replace(/\n/g, ''));
-            const cleanedGrid = Array(8).fill(null).map((_, rowIndex) => 
-                Array(12).fill(0).map((_, colIndex) => 
-                    parsedData[rowIndex] && parsedData[rowIndex][colIndex] 
-                        ? String(parsedData[rowIndex][colIndex]) 
-                        : String("UNUSED")
-                )
-            );
+    useEffect(() => {
+        const getSteps = async () => {
+            try {
+                const response = await fetch("http://localhost:8080/uploadManifest", {
+                    method: "GET",
+                });
     
-            console.log(cleanedGrid);
-            setInstruction(cleanedGrid);
-        } catch (error) {
-            console.error("Full error details:", error);
-            alert("There was an error getting manifest.");
-        }
-    };
+                if (!response.ok) {
+                    console.log("failed/")
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Upload failed');
+                }
+    
+                // const data = await response.text();
+                // const parsedData = JSON.parse(data.replace(/\n/g, ''));
+                // const cleanedGrid = Array(8).fill(null).map((_, rowIndex) => 
+                //     Array(12).fill(0).map((_, colIndex) => 
+                //         parsedData[rowIndex] && parsedData[rowIndex][colIndex] 
+                //             ? String(parsedData[rowIndex][colIndex]) 
+                //             : String("UNUSED")
+                //     )
+                // );
+    
+                const data = await response.text();
+            
+                // More aggressive cleaning
+                const cleanedData = data
+                    .replace(/'/g, '"')      // Replace single quotes with double quotes
+                    .replace(/\n/g, '')      // Remove newlines
+                    .replace(/\s+/g, '')     // Remove extra whitespace
+        
+                const parsedData = JSON.parse(cleanedData);
+        
+                // console.log(parsedData)
+                setInstruction(parsedData);
+            } catch (error) {
+                console.error("Full error details:", error);
+                alert("There was an error getting manifest.");
+            }
+        };
+    }, []);
 
     return (
         <div className="flex flex-col items-center">
@@ -90,13 +102,13 @@ const ContainersPanel = ()  => {
                         className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
                         PREV
                     </button>
-                    <button 
+                    {/* <button 
                         onClick={getSteps} 
                         className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
                         Get manifest test
-                    </button>
+                    </button> */}
                 </div> 
-                <Containers grid={instruction}/>
+                <Containers grid={instruction[currentIndex]}/>
                 <div className="flex flex-col w-[10%] space-y-[15%] items-center">
                     <button 
                         onClick={nextGrid} 

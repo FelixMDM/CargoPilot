@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Containers from "./Containers";
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -10,11 +10,13 @@ interface CommentFormElement extends HTMLFormElement {
     readonly elements: FormElements
 }
 
+type Matrix = string[]
+
 const ContainersPanel = ()  => {
-    const [instruction, setInstruction] = useState("No steps generated")
+    const [instruction, setInstruction] = useState<Matrix[]>([]);
     const [comments, setComments] = useState<string>("");
     const [currentIndex, setCurrentIndex] = useState(0);
-    
+
     const grids: number[][][] = [
         [
             [0, 1, 0],
@@ -48,6 +50,36 @@ const ContainersPanel = ()  => {
         setComments("");
     };
 
+    const getSteps = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/uploadManifest", {
+                method: "GET",
+            });
+
+            if (!response.ok) {
+                console.log("failed/")
+                const errorText = await response.text();
+                throw new Error(errorText || 'Upload failed');
+            }
+
+            const data = await response.text();
+            const parsedData = JSON.parse(data.replace(/\n/g, ''));
+            const cleanedGrid = Array(8).fill(null).map((_, rowIndex) => 
+                Array(12).fill(0).map((_, colIndex) => 
+                    parsedData[rowIndex] && parsedData[rowIndex][colIndex] 
+                        ? String(parsedData[rowIndex][colIndex]) 
+                        : String("UNUSED")
+                )
+            );
+    
+            console.log(cleanedGrid);
+            setInstruction(cleanedGrid);
+        } catch (error) {
+            console.error("Full error details:", error);
+            alert("There was an error getting manifest.");
+        }
+    };
+
     return (
         <div className="flex flex-col items-center">
             <div className="flex flex-row mt-[5%] justify-evenly">
@@ -58,14 +90,13 @@ const ContainersPanel = ()  => {
                         className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
                         PREV
                     </button>
-                    <div className="border rounded-md">
-                        <p className="m-2">
-                            {/* This should be dynamically updated based on the array map */}
-                            {instruction}
-                        </p>
-                    </div>
+                    <button 
+                        onClick={getSteps} 
+                        className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
+                        Get manifest test
+                    </button>
                 </div> 
-                <Containers grid={grids[currentIndex]}/>
+                <Containers grid={instruction}/>
                 <div className="flex flex-col w-[10%] space-y-[15%] items-center">
                     <button 
                         onClick={nextGrid} 

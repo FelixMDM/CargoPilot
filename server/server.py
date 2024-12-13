@@ -37,14 +37,24 @@ load = 1
 
 # begin funcs
 def manifestToGrid(gridContainerClass: list[list[Container]]):
-    # take the container class from the read manfiest function, generate a numbers only representation of this
-    numericalGrid = [[0 for _ in range(12)] for _ in range(8)]
+    # take the container class from the read manfiest function, generate a names only representation of this
+    nameGrid = [[0 for _ in range(12)] for _ in range(8)]
 
     for i in range(8):
         for j in range(12):
-            numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
+            nameGrid[i][j] = gridContainerClass[i][j].get_name()
 
-    return numericalGrid
+    return nameGrid
+
+def manifestToNum(gridContainerClass: list[list[Container]]):
+    # take the container class from the read manfiest function, generate a numbers only representation of this
+    numGrid = [[0 for _ in range(12)] for _ in range(8)]
+
+    for i in range(8):
+        for j in range(12):
+            numGrid[i][j] = gridContainerClass[i][j].get_weight()
+
+    return numGrid
 
 def hueristicBalance(grid):
     leftSum = 0
@@ -368,36 +378,40 @@ def return_home():
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
 
-@app.route("/uploadManifest", methods = ["POST"])
+@app.route("/uploadManifest", methods = ["POST", "GET"])
 def upload_mainfest():
-    try:
-        manifest = request.files['manifest']
+    if request.method == "POST":
+        try:
+            manifest = request.files['manifest']
 
-        # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
-        manifest_path = "./manifests/" + manifest.filename
-        manifest.save(manifest_path)
+            # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
+            manifest_path = "./manifests/" + manifest.filename
+            manifest.save(manifest_path)
 
-        # pass the actual manifest file that's presumable cached into the balance function
-        containerClassGrid = read_manifest.read_manifest(manifest_path)
-        numericalGrid = manifestToGrid(containerClassGrid)
+            # log to the user that the manifest was uplpoaded
+            return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
+        except Exception as e:
+            server_logger.error("Upload manifest error", error=str(e))
+            return jsonify({'error': "Upload operation failed"}), 500
+    else:
+        try:
+            # grab the manifest file that we need to use
+            manifest_path = "./manifests/ShipCase1.txt"
 
-        for i in range(8):
-            for j in range(12):
-                print(numericalGrid[i][j])
-            print("\n")
+            # pass the actual manifest file that's presumable cached into the balance function
+            containerClassGrid = read_manifest.read_manifest(manifest_path)
+            
+            simpleGrid = manifestToGrid(containerClassGrid)
+            numericalGrid = manifestToNum(containerClassGrid)
+            print(simpleGrid)
 
-        for i in range(8):
-            for j in range(12):
-                print(containerClassGrid[i][j].get_weight())
-            print("\n")
-
-        balance(numericalGrid)
-
-        # log to the user that the manifest was uplpoaded
-        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
-    except Exception as e:
-        server_logger.error("Upload manifest error", error=str(e))
-        return jsonify({'error': "Upload operation failed"}), 500
+            balance(numericalGrid)
+            # print(numericalGrid)
+            # print(containerClassGrid)
+            return jsonify(simpleGrid)
+        except Exception as e:
+            server_logger.error("Error fetching manifest", error=str(e))
+            return jsonify({'error': "Fetch failed for manifest"}), 500
       
 
 if __name__ == "__main__":

@@ -36,6 +36,32 @@ load = 1
 #     })
 
 # begin funcs
+# Creating a function that will take each container in the grid and give it an ID based on it's name.
+# Duplicate names get the same ID
+def createIDS(grid: list[list[Container]]):
+    count = 0
+    dict = {}
+    for row in grid:
+        for col in row:
+            if col.get_name() in dict:
+                continue
+            else:
+                dict[col.get_name()] = count
+                count += 1
+    return dict
+
+# Creating a fucntion that takes in a list of container names that are to be unloaded, and the IDs created above
+# it will output a new dictionary that is how many of each container to remove based on it's ID
+# We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
+def createToUnload(toUnload, iDs):
+    dict = {}
+    for container in toUnload:
+        if iDs[container] in dict:
+            dict[iDs[container]] +=1
+        else:
+            dict[iDs[container]] = 1 
+    return dict
+
 def manifestToGrid(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numericalGrid = [[0 for _ in range(12)] for _ in range(8)]

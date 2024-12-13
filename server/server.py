@@ -372,14 +372,14 @@ def log_message():
 def download_logs():
     try:
         date_str = datetime.now().strftime("%Y-%m-%d")
-        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.log')
+        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.txt')
         
         if os.path.exists(log_file):
             return send_file(
                 log_file,
                 mimetype='text/plain',
                 as_attachment=True,
-                download_name=f"cargopilot-logs-{date_str}.log"
+                download_name=f"cargopilot-logs-{date_str}.txt"
             )
         return jsonify({'error': 'Log file not found'}), 404
     except Exception as e:

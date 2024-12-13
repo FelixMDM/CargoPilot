@@ -17,11 +17,11 @@ from read_manifest import Container
 
 # # to kill venv process: deactivate
 
-grid = [[1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [-1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [-1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
+        [-1, -1, 51, -1, 21, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 15, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
@@ -127,7 +127,26 @@ def hueristicBalance(grid):
 
     
 def canBalance(grid): # first we will check if can be balanced, if so it will just return true, otherwise it will return true, and (0, 0) otherwise, false nad (leftweight, rightweight) wieghts after sift
-    return True
+    weights = []
+    for i in range(6):
+            for j in range(8):
+                if grid[j][i] >= 0:
+                    weights.append(grid[j][i])
+                if grid[j][i + 6] >= 0:
+                    weights.append(grid[j][i + 6])
+    weights.sort(reverse=True)
+    left = 0
+    right = 0
+    for i in range(len(weights)):
+        if i % 2 == 0:
+            left += weights[i]
+        else:
+            right += weights[i]
+    if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
+        return True, 0, 0
+    print(f"Left Goal: {left}, Right Goal: {right}")
+    return False, left, right
+    
 def balance(grid):
     # create a queue
     # add start state to queue
@@ -136,6 +155,7 @@ def balance(grid):
         # check if it is goal
         # if goal break
         # for each possible move, add it to the queue.
+    canB, leftGoal, rightGoal =canBalance(grid)
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
@@ -164,7 +184,8 @@ def balance(grid):
                     right += curr_grid[j][i + 6]
                 elif curr_grid[j][i + 6] == -2:
                     topContainers[i + 6] = j
-        if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
+        if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
+            print(f"Left : {left}, Right : {right}")
             # balanced
             return curr_cost, curr_grid, path
         maxToContainer = -1
@@ -447,13 +468,13 @@ def upload_mainfest():
       
 
 if __name__ == "__main__":
-    # print("hello world")
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    # print("goodbye world")
-    # print(solution[0])
-    # print(solution[2])
-    # print(solution[1])
+    print("hello world")
+    solution = balance(grid)
+    print(hueristicBalance(grid))
+    print("goodbye world")
+    print(solution[0])
+    print(solution[2])
+    print(solution[1])
 
-    app.run(debug=True, port=8080)
+    # app.run(debug=True, port=8080)
 

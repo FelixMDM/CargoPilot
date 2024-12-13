@@ -322,33 +322,35 @@ def return_home():
 
 @app.route("/uploadManifest", methods = ["POST"])
 def upload_mainfest():
-    manifest = request.files['manifest']
+    try:
+        manifest = request.files['manifest']
 
-    # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
-    manifest_path = "./manifests/" + manifest.filename
-    manifest.save(manifest_path)
+        # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
+        manifest_path = "./manifests/" + manifest.filename
+        manifest.save(manifest_path)
 
-    # pass the actual manifest file that's presumable cached into the balance function
-    containerClassGrid = read_manifest.read_manifest(manifest_path)
-    numericalGrid = manifestToGrid(containerClassGrid)
+        # pass the actual manifest file that's presumable cached into the balance function
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+        numericalGrid = manifestToGrid(containerClassGrid)
 
-    for i in range(8):
-        for j in range(12):
-            print(numericalGrid[i][j])
-        print("\n")
+        for i in range(8):
+            for j in range(12):
+                print(numericalGrid[i][j])
+            print("\n")
 
-    for i in range(8):
-        for j in range(12):
-            print(containerClassGrid[i][j].get_weight())
-        print("\n")
+        for i in range(8):
+            for j in range(12):
+                print(containerClassGrid[i][j].get_weight())
+            print("\n")
 
-    balance(numericalGrid)
+        balance(numericalGrid)
 
-    # log to the user that the manifest was uplpoaded
-    return jsonify ({
-        'message': "File uploaded. Press 'OK' to proceed",
-    })
-
+        # log to the user that the manifest was uplpoaded
+        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
+    except Exception as e:
+        server_logger.error("Upload manifest error", error=str(e))
+        return jsonify({'error': "Upload operation failed"}), 500
+      
 
 if __name__ == "__main__":
     # print("hello world")

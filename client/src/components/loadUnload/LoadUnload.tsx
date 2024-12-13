@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Containers from "../containers/containersLoadUnload";
 
-const ContainersPanel = () => {
+const Unload = () => {
     const [unload, setUnload] = useState(false);
 
     const handleUnload = () => {
@@ -31,4 +31,4 @@ const ContainersPanel = () => {
     );
 };
 
-export default ContainersPanel;
+export default Unload;

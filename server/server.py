@@ -217,7 +217,7 @@ def generate_manifest():
     new_path = os.path.join("./manifests/", new_name)
     os.rename(manifest.filename, new_name)
 
-    # download on user's computer
+    # save updated manifest
     manifest.save(new_path)
 
     return jsonify ({

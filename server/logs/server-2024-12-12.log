@@ -1,0 +1,2 @@
+2024-12-12 22:39:25 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-12 22:39:41 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}

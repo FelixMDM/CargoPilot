@@ -1,0 +1,14 @@
+2024-12-08 16:28:24 - INFO - Login: User "Yash" logged in successfully
+2024-12-08 16:28:39 - ERROR - Error downloading logs: name 'datetime' is not defined
+2024-12-08 16:32:07 - INFO - Downloading log file: /Users/yashmit/Documents/CS179/cargopilot/server/logs/server-2024-12-08.log
+2024-12-08 16:32:07 - ERROR - Error downloading logs: name 'send_file' is not defined
+2024-12-08 16:32:24 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1', 'method': 'GET'}
+2024-12-08 16:32:35 - INFO - Login: User "Yash" logged in successfully
+2024-12-08 16:32:42 - INFO - Downloading log file: /Users/yashmit/Documents/CS179/cargopilot/server/logs/server-2024-12-08.log
+2024-12-08 16:32:42 - ERROR - Error downloading logs: name 'send_file' is not defined
+2024-12-08 16:35:44 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1', 'method': 'GET'}
+2024-12-08 16:35:49 - INFO - Login: User "Yash" logged in successfully
+2024-12-08 16:35:54 - INFO - Downloading log file: /Users/yashmit/Documents/CS179/cargopilot/server/logs/server-2024-12-08.log
+2024-12-08 17:04:43 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-08 17:04:51 - INFO - Login: User "Conor" logged in successfully
+2024-12-08 17:09:31 - INFO - Login: User "Navya" logged in successfully

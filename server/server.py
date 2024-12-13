@@ -317,7 +317,7 @@ def upload_mainfest():
     manifest.save(manifest_path)
 
     return jsonify ({
-        'message': "uploadManifest endpoint called",
+        'message': "File uploaded. Press 'OK' to proceed",
     })
 
 
@@ -329,4 +329,4 @@ if __name__ == "__main__":
     print(solution[0])
     print(solution[2])
     print(solution[1])
-    # app.run(debug=True, port=8080)
+    app.run(debug=True, port=8080)

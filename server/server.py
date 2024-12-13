@@ -446,23 +446,20 @@ def upload_mainfest():
         return jsonify({'error': "Upload operation failed"}), 500
       
 
-@app.route("/downloadManifest", methods=["POST","GET"])
+@app.route("/downloadManifest", methods=["GET"])
 def download_manifest():
     try:
-        generateManifest("hello")
-        manifest_path = "./new_manifests/ShipCase1_OUTBOUND.txt"
+        manifest_path = "./new_manifests/ShipCase1_OUTBOUND.txt" # replace ShipCase1 with a variable holding the original manifest name
+        with open(manifest_path, 'w') as file:
+            file.write(str("hello")) # need to get data from somewhere (parameter or global variable) - replace "hello" with actual data
         return send_file(
                 manifest_path,
                 as_attachment=True,
-                download_name="ShipCase1.txt"
+                download_name="ShipCase1.txt" # replace with new manifest name (original name + "_OUTBOUND.txt")
             )
     except Exception as e:
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
-    
-def generateManifest(containers):
-    with open('./new_manifests/ShipCase1_OUTBOUND.txt', 'w') as file:
-        file.write(containers) 
                 
 if __name__ == "__main__":
     # print("hello world")

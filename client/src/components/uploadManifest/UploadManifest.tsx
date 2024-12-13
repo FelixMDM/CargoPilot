@@ -9,38 +9,28 @@ const UploadManifest = () => {
     const [isUploaded, setIsUploaded] = useState(false);
     const [dynamicLink, setDynamicLink] = useState('');
     const [file, setFile] = React.useState<File>();
+    const [fileName, setFileName] = useState<string>(''); // State for file name
     const searchParams = useSearchParams();
 
-    //url redirect so can decide if it proceeds to load unload or balance
+    // URL redirect logic
     useEffect(() => {
-        // Extract the redirectTo query parameter from the URL using useSearchParams
         const redirectTo = searchParams.get('redirectTo');
-        
-        // Set dynamicLink based on the value of redirectTo
         if (redirectTo === '/loadUnload' || redirectTo === '/balance') {
             setDynamicLink(redirectTo);
         } else {
-            // Default case, in case no valid redirectTo is found
             setDynamicLink('/loadUnload');
         }
-    }, [searchParams]); // Dependency array ensures this runs when searchParams changes
-
-    //file logic, click to upload file button
-    
-    const handleUpload = () => {
-        // Simulate the upload process (you can replace this with your actual upload logic)
-        setIsUploaded(true);
-    };
+    }, [searchParams]);
 
     // Handle file selection
     const handleFileChange = function (e: React.ChangeEvent<HTMLInputElement>) {
         const filelist = e.target.files;
         if (!filelist) return;
-    
         const selectedFile = filelist[0];
         console.log("Selected File:", selectedFile);
         setFile(selectedFile);
-    }
+        setFileName(selectedFile.name); // Save the file name
+    };
 
     // Handle the form submission (sending the file to the server)
     const handleSubmit = async () => {
@@ -50,43 +40,63 @@ const UploadManifest = () => {
         }
         const formData = new FormData();
         formData.append("manifest", file);
-        
-        console.log("Sending file:", file.name);
-        
+
         try {
             const response = await fetch("http://localhost:8080/uploadManifest", {
                 method: "POST",
                 body: formData,
             });
-            
-            console.log("Response status:", response.status);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error("Error response:", errorText);
                 throw new Error(errorText || 'Upload failed');
             }
-            
+
             const result = await response.json();
             alert(result.message);
         } catch (error) {
             console.error("Full error details:", error);
             alert("There was an error uploading the file.");
         }
+        setIsUploaded(true);
     };
 
     return (
         <div className="flex flex-col h-[80vh] text-white font-bold text-center justify-center items-center">
             <h1 className="text-2xl mb-4">Upload Manifest</h1>
             {!isUploaded ? (
-                <div>
-                    <input
-                        type="file"
-                        onChange={handleFileChange}
-                        className="mb-4 p-2 border border-gray-400 rounded-md"
-                    />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <label
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '8px',
+                            border: '1px solid gray',
+                            borderRadius: '8px',
+                            width: '300px',
+                            cursor: 'pointer',
+                            backgroundColor: '#f0f0f0',
+                        }}
+                    >
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            style={{ display: 'none' }} // Hide the file input
+                        />
+                        <span style={{ flex: 1, color: fileName ? 'black' : '#999' }}>
+                            {fileName || 'Choose File'}
+                        </span>
+                    </label>
                     <button
-                        className="w-[300px] p-4 m-2 bg-blue-600 rounded-2xl hover:text-white"
+                        style={{
+                            width: '300px',
+                            padding: '16px',
+                            marginTop: '8px',
+                            backgroundColor: '#1D4ED8',
+                            borderRadius: '16px',
+                            color: 'white',
+                            cursor: 'pointer',
+                        }}
                         onClick={handleSubmit}
                     >
                         Upload Manifest
@@ -94,7 +104,13 @@ const UploadManifest = () => {
                 </div>
             ) : (
                 <div>
-                    <p className="text-green-500">Manifest Uploaded Successfully!</p>
+                    <p 
+                    className="text-green-500"
+                    style={{
+                        marginBottom: '16px', // Adds space below the text
+                        fontSize: '1.25rem'
+                    }}
+                    >Manifest Uploaded Successfully!</p>
                     <Link
                         href={dynamicLink}
                         className="w-[300px] p-4 m-2 bg-blue-600 rounded-2xl hover:text-white"

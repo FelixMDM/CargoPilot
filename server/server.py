@@ -346,7 +346,7 @@ def upload_mainfest():
 
     # log to the user that the manifest was uplpoaded
     return jsonify ({
-        'message': "uploadManifest endpoint called",
+        'message': "File uploaded. Press 'OK' to proceed",
     })
 
 

@@ -17,14 +17,14 @@ from read_manifest import Container
 
 # # to kill venv process: deactivate
 
-grid = [[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+grid = [[1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
 unload = {"1": 3}
 load = 1
@@ -42,11 +42,18 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     for i in range(8):
         for j in range(12):
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numericalGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numericalGrid[i][j] = -1
+                continue
             numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
 
     return numericalGrid
 
 def hueristicBalance(grid):
+    # return 1
     leftSum = 0
     rightSum = 0
     right = []
@@ -121,18 +128,24 @@ def balance(grid):
         right = 0
         for i in range(6):
             for j in range(8):
-                if curr_grid[j][i]:
+                if curr_grid[j][i] >= 0:
                     topContainers[i] = j
-                if curr_grid[j][i + 6]:
+                    left += curr_grid[j][i]
+                elif curr_grid[j][i] == -2:
+                    topContainers[i] = j
+                if curr_grid[j][i + 6] >= 0:
                     topContainers[i + 6] = j
-                left += curr_grid[j][i]
-                right += curr_grid[j][i + 6]
+                    right += curr_grid[j][i + 6]
+                elif curr_grid[j][i + 6] == -2:
+                    topContainers[i + 6] = j
         if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
             # balanced
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):
             if topContainers[i] == -1:
+                continue
+            elif curr_grid[topContainers[i]][i] == -2:
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -172,15 +185,17 @@ def balance(grid):
                 # moving container from top of column i, to top of column j
                 newgrid = [row[:] for row in curr_grid]
                 newgrid[k][j] = newgrid[index][i]
-                newgrid[index][i] = 0
+                newgrid[index][i] = -1
                 heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
     return None
 
-def balanceOutput(grid, steps):
+def balanceOutput(grid: list[list[Container]], steps):
     output = [grid]
     for item in steps:
         newgrid = [row[:] for row in output[-1]]
-        newgrid[]
+        newgrid[item[2]][item[3]] = output[-1][item[0]][item[1]]
+        newgrid[item[0]][item[1]] = 0
+        output += [newgrid]
 
 def hueristicLoad(grid, toUnload, toLoad):
     if(not toUnload and not toLoad):

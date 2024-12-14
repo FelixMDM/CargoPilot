@@ -85,6 +85,18 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     return nameGrid
 
+def manifestToGridLoad(gridContainerClass: list[list[Container]], iDs):
+    numGrid = [[0 for _ in range(12)] for _ in range(8)]
+    for i in range(8):
+        for j in range(12):
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numGrid[i][j] = -1
+                continue
+            numGrid[i][j] = iDs[gridContainerClass[i][j].get_name]
+
 def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -615,6 +627,21 @@ def submit_load():
         return jsonify({"message": "No number of containers provided"}), 400
 
     numLoad = data["numLoad"]
+        
+    manifestName = ""
+    with open("./globals/path.txt", "r") as file:
+        manifestName = file.readline().strip()
+    containersToUnload = []
+    with open("cellsToUnload.txt", "r") as file:
+        containersToUnload = [line.strip() for line in file]
+    manifest_path = "./manifests/" + manifestName
+    containerClassGrid = read_manifest.read_manifest(manifest_path)
+    iDs = createIDS(containerClassGrid)
+    toUnload = createToUnload(containersToUnload, iDs)
+    ship = manifestToGridLoad(containerClassGrid, iDs)
+    solution = loadUnload(ship, toUnload, numLoad)
+    print(f"Solution of load/unload: {solution}")
+
 
     # Handle the logic for the number of containers
     print(f"Number of containers to load: {numLoad}")

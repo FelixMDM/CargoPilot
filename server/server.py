@@ -2,12 +2,17 @@ from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 import heapq
 import copy
+import numpy as np 
 
 from utils.logger import server_logger
 import os
 from datetime import datetime
 import read_manifest
 from read_manifest import Container
+from config import MANIFEST_NAME
+
+from functools import lru_cache
+import numpy as np
 
 # app instance
 # You will need to create a virtual environment named 'venv' to use (venv is the name specified in the gitignore)
@@ -17,16 +22,25 @@ from read_manifest import Container
 
 # # to kill venv process: deactivate
 
-grid = [[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
+        [1, -1, 51, -1, 21, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 15, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-unload = {"1": 3}
+grid2 = [[-2, 1, 2, 3, -1, -1, -1, -1, -1, -1, -1, -2],
+        [1, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
+
+# unload = {"1": 1, "3": 1} # "1": 1, "3": 1
 load = 1
 # /api/home
 # @app.route("/api/home", methods=['GET'])
@@ -36,17 +50,76 @@ load = 1
 #     })
 
 # begin funcs
+# Creating a function that will take each container in the grid and give it an ID based on it's name.
+# Duplicate names get the same ID
+def createIDS(grid: list[list[Container]]):
+    count = 0
+    dict = {}
+    for row in grid:
+        for col in row:
+            if col.get_name() in dict:
+                continue
+            else:
+                dict[col.get_name()] = count
+                count += 1
+    return dict
+
+# Creating a fucntion that takes in a list of container names that are to be unloaded, and the IDs created above
+# it will output a new dictionary that is how many of each container to remove based on it's ID
+# We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
+def createToUnload(toUnload, iDs):
+    dict = {}
+    for container in toUnload:
+        if iDs[container] in dict:
+            dict[iDs[container]] +=1
+        else:
+            dict[iDs[container]] = 1 
+    return dict
+
 def manifestToGrid(gridContainerClass: list[list[Container]]):
-    # take the container class from the read manfiest function, generate a numbers only representation of this
-    numericalGrid = [[0 for _ in range(12)] for _ in range(8)]
+    # take the container class from the read manfiest function, generate a names only representation of this
+    nameGrid = [[0 for _ in range(12)] for _ in range(8)]
 
     for i in range(8):
         for j in range(12):
-            numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
+            nameGrid[i][j] = gridContainerClass[i][j].get_name()
 
-    return numericalGrid
+    return nameGrid
+
+def manifestToNum(gridContainerClass: list[list[Container]]):
+    # take the container class from the read manfiest function, generate a numbers only representation of this
+    numGrid = [[0 for _ in range(12)] for _ in range(8)]
+
+    for i in range(8):
+        for j in range(12):
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numGrid[i][j] = -1
+                continue
+            numGrid[i][j] = gridContainerClass[i][j].get_weight()
+
+    return numGrid
+
+def generateSteps(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        startR, startC = soln[i][0], soln[i][1]
+        endR, endC = soln[i][2], soln[i][3]
+        nextStep = copy.deepcopy(steps[i])
+
+        tmp = nextStep[endR][endC]
+        nextStep[endR][endC] = nextStep[startR][startC]
+        nextStep[startR][startC] = tmp
+
+        steps.append(nextStep)
+    return steps
 
 def hueristicBalance(grid):
+    # return 1
     leftSum = 0
     rightSum = 0
     right = []
@@ -92,9 +165,54 @@ def hueristicBalance(grid):
                 continue
     return cost
 
-    
+
+# Using a simple recusrive 0 1 knapsack algorithm to calculate whether it is possible to balance the grid or not
+# This is an algorithm that I wrote many times in CS 119/142 and more complicated versions in CS218.
+# It was introduced to us in CS141
+def recursiveKnap(n, w, dp, weights, values):
+    if w == 0:
+        return 0
+    if n == 0:
+        return 0
+    if dp[n - 1][w - 1] > 0:
+        return dp[n - 1][w - 1]
+    if w < weights[n - 1]:
+        return recursiveKnap(n - 1, w, dp, weights, values)
+
+    not_taken = recursiveKnap(n - 1, w, dp, weights, values)
+    taken = values[n - 1] + recursiveKnap(n - 1, w - weights[n - 1], dp, weights, values)
+
+    if taken > not_taken:
+        dp[n - 1][w - 1] = taken
+        return taken
+
+    dp[n - 1][w - 1] = not_taken
+    return not_taken
+
 def canBalance(grid): # first we will check if can be balanced, if so it will just return true, otherwise it will return true, and (0, 0) otherwise, false nad (leftweight, rightweight) wieghts after sift
-    return True
+    weights = []
+    for i in range(6):
+            for j in range(8):
+                if grid[j][i] >= 0:
+                    weights.append(grid[j][i])
+                if grid[j][i + 6] >= 0:
+                    weights.append(grid[j][i + 6])
+    weights.sort(reverse=True)
+    sum = np.sum(weights)
+    dp = np.zeros((len(weights), sum // 2))
+    total = recursiveKnap(len(weights), sum // 2, dp, weights, weights)
+    if(((sum - total) - total) / (sum - total) <= 0.1):
+        return True, 0, 0
+    left = 0
+    right = 0
+    for i in range(len(weights)):
+        if i % 2 == 0:
+            left += weights[i]
+        else:
+            right += weights[i]
+    print(f"Left Goal: {left}, Right Goal: {right}")
+    return False, left, right
+    
 def balance(grid):
     # create a queue
     # add start state to queue
@@ -107,6 +225,7 @@ def balance(grid):
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
     visited = set()
+    canB, leftGoal, rightGoal = canBalance(grid)
     while(heap):
         count += 1
         hCost, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
@@ -121,18 +240,25 @@ def balance(grid):
         right = 0
         for i in range(6):
             for j in range(8):
-                if curr_grid[j][i]:
+                if curr_grid[j][i] >= 0:
                     topContainers[i] = j
-                if curr_grid[j][i + 6]:
+                    left += curr_grid[j][i]
+                elif curr_grid[j][i] == -2:
+                    topContainers[i] = j
+                if curr_grid[j][i + 6] >= 0:
                     topContainers[i + 6] = j
-                left += curr_grid[j][i]
-                right += curr_grid[j][i + 6]
-        if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
+                    right += curr_grid[j][i + 6]
+                elif curr_grid[j][i + 6] == -2:
+                    topContainers[i + 6] = j
+        if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
+            print(f"Left : {left}, Right : {right} CanBalance: {canB}")
             # balanced
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):
             if topContainers[i] == -1:
+                continue
+            elif curr_grid[topContainers[i]][i] == -2:
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -172,32 +298,40 @@ def balance(grid):
                 # moving container from top of column i, to top of column j
                 newgrid = [row[:] for row in curr_grid]
                 newgrid[k][j] = newgrid[index][i]
-                newgrid[index][i] = 0
+                newgrid[index][i] = -1
                 heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
-                
     return None
 
+def balanceOutput(grid: list[list[Container]], steps):
+    output = [grid]
+    for item in steps:
+        newgrid = [row[:] for row in output[-1]]
+        newgrid[item[2]][item[3]] = output[-1][item[0]][item[1]]
+        newgrid[item[0]][item[1]] = 0
+        output += [newgrid]
+
 def hueristicLoad(grid, toUnload, toLoad):
-    if(not toUnload and not toLoad):
+    # return sum(toUnload.values()) * 4 + toLoad * 2 # This is faster but also a larger underestimate of the cost
+    count = np.sum(toUnload)
+    if(not count and not toLoad):
         return 0
-    if(not toUnload):
+    if(not count):
         return 4 * toLoad
     unload = toUnload.copy()
     unloadCosts = []
     for i in range(len(grid)):
         for j in range(len(grid[0])):
-            if str(grid[i][j]) in toUnload:
+            if grid[i][j] < 96 and unload[grid[i][j]]:
                 unloadCosts += [(8 - i + j + 2, i, j)]
-    unloadCosts.sort()
     totalCost = 4 * toLoad
+
     for cost, row, col in unloadCosts:
-        if(str(grid[row][col] in unload)):
+        if(grid[row][col] < 96 and unload[grid[row][col]]):
             totalCost += cost
-            unload[str(grid[row][col])] -= 1
-            if(unload[str(grid[row][col])] == 0):
-                del unload[str(grid[row][col])]
-                if(not unload):
-                    return totalCost
+            unload[grid[row][col]] -= 1
+            count -= 1
+            if(count == 0):
+                return totalCost
             if(not toLoad):
                 totalCost += 2
             toLoad -= 1
@@ -223,17 +357,27 @@ def loadUnload(grid, toUnload, toLoad):
         topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
         for i in range(6):
             for j in range(8):
-                if curr_grid[j][i]:
+                if curr_grid[j][i] != -1:
                     topContainers[i] = j
-                if curr_grid[j][i + 6]:
+                if curr_grid[j][i + 6] != -1:
                     topContainers[i + 6] = j
 
-        if(not load and not unload):
+        if(not load and not np.sum(unload)):
             # finished
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):
             if topContainers[i] == -1:
+                continue
+            elif curr_grid[topContainers[i]][i] == -2:
+                if(load):
+                    if(topContainers[i] < 7):
+                        newgrid = [row[:] for row in curr_grid]
+                        cost = i + 8 - topContainers[i] + 2
+                        newgrid[topContainers[i] + 1][i] = 96 + toLoad - load #give a unique id
+                        if(not craneDocked):
+                            cost += 2 + 8 - pos[0] + pos[1]
+                        heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -285,7 +429,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
                     heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
-            if(str(curr_grid[topContainers[i]][i]) in unload):
+            if(curr_grid[topContainers[i]][i] < 96 and unload[curr_grid[topContainers[i]][i]]):
                 newgrid = [row[:] for row in curr_grid]
                 cost = i + 8 - topContainers[i] + 2 + craneCost
                 newgrid[topContainers[i]][i] = 0
@@ -293,10 +437,7 @@ def loadUnload(grid, toUnload, toLoad):
                     cost += 2
                 # remove from unload
                 newUnload = unload.copy()
-                newUnload[str((curr_grid[topContainers[i]][i]))] -= 1
-                if(newUnload[str((curr_grid[topContainers[i]][i]))] == 0):
-                    del newUnload[str((curr_grid[topContainers[i]][i]))]
-                
+                newUnload[curr_grid[topContainers[i]][i]] -= 1
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
@@ -341,14 +482,14 @@ def log_message():
 def download_logs():
     try:
         date_str = datetime.now().strftime("%Y-%m-%d")
-        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.log')
+        log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.txt')
         
         if os.path.exists(log_file):
             return send_file(
                 log_file,
                 mimetype='text/plain',
                 as_attachment=True,
-                download_name=f"cargopilot-logs-{date_str}.log"
+                download_name=f"cargopilot-logs-{date_str}.txt"
             )
         return jsonify({'error': 'Log file not found'}), 404
     except Exception as e:
@@ -383,37 +524,47 @@ def return_home():
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
 
-@app.route("/uploadManifest", methods = ["POST"])
+@app.route("/uploadManifest", methods = ["POST", "GET"])
 def upload_mainfest():
-    try:
-        manifest = request.files['manifest']
+    if request.method == "POST":
+        try:
+            manifest = request.files['manifest']
 
-        # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
-        manifest_path = "./manifests/" + manifest.filename
-        manifest.save(manifest_path)
+            # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
+            manifest_path = "./manifests/" + manifest.filename
+            manifest.save(manifest_path)
 
-        # pass the actual manifest file that's presumable cached into the balance function
-        containerClassGrid = read_manifest.read_manifest(manifest_path)
-        numericalGrid = manifestToGrid(containerClassGrid)
+            # find a way to pass this back to the FE
+            MANIFEST_NAME = manifest.filename
 
-        for i in range(8):
-            for j in range(12):
-                print(numericalGrid[i][j])
-            print("\n")
+            # log to the user that the manifest was uplpoaded
+            return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
+        except Exception as e:
+            server_logger.error("Upload manifest error", error=str(e))
+            return jsonify({'error': "Upload operation failed"}), 500
+    else:
+        try:
+            # grab the manifest file that we need to use
+            manifest_path = "./manifests/ShipCase1.txt"
 
-        for i in range(8):
-            for j in range(12):
-                print(containerClassGrid[i][j].get_weight())
-            print("\n")
-
-        balance(numericalGrid)
-
-        # log to the user that the manifest was uplpoaded
-        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
-    except Exception as e:
-        server_logger.error("Upload manifest error", error=str(e))
-        return jsonify({'error': "Upload operation failed"}), 500
-
+            # pass the actual manifest file that's presumable cached into the balance function
+            containerClassGrid = read_manifest.read_manifest(manifest_path)
+            
+            simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
+            numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
+            print(simpleGrid)
+            soln = balance(numericalGrid)
+            steps = generateSteps(soln[2], simpleGrid)
+            print(steps) # generated steps by this point for balancing, now we just have to pass it right
+            # print(numericalGrid)
+            # print(containerClassGrid)
+            print(soln[2])
+            returnItems = [{"steps": steps}, {"moves": soln[2]}]
+            return jsonify(returnItems)
+        except Exception as e:
+            server_logger.error("Error fetching manifest", error=str(e))
+            return jsonify({'error': "Fetch failed for manifest"}), 500
+      
 @app.route("/unloadAction", methods=["POST"])
 def unload_action():
     data = request.get_json()
@@ -459,13 +610,17 @@ def submit_load():
 
 
 if __name__ == "__main__":
-    # print("hello world")
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    # print("goodbye world")
-    # print(solution[0])
-    # print(solution[2])
-    # print(solution[1])
+    print("hello world")
+    unload = np.zeros(96)
+    unload[1] = 1
+    unload[3] = 1
+    # solution = loadUnload(grid2, unload, load)
+    solution = balance(grid)
+    print(hueristicBalance(grid))
+    print("goodbye world")
+    print(solution[0])
+    print(solution[2])
+    print(solution[1])
 
     app.run(debug=True, port=8080)
 

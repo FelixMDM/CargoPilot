@@ -9,7 +9,6 @@ import os
 from datetime import datetime
 import read_manifest
 from read_manifest import Container
-from config import MANIFEST_NAME
 
 from functools import lru_cache
 import numpy as np
@@ -545,8 +544,11 @@ def upload_mainfest():
             manifest_path = "./manifests/" + manifest.filename
             manifest.save(manifest_path)
 
-            # find a way to pass this back to the FE
-            MANIFEST_NAME = manifest.filename
+            try:
+                f = open("./globals/path.txt", "w")
+                f.write(manifest.filename)
+            except Exception as e:
+                print(f"Failed to write to file: {e}")
 
             # log to the user that the manifest was uplpoaded
             return jsonify({'message': "File uploaded. Press 'OK' to proceed"})

@@ -220,6 +220,7 @@ def balance(grid):
         # check if it is goal
         # if goal break
         # for each possible move, add it to the queue.
+    server_logger.info("Starting balance algorithm")
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
@@ -252,6 +253,10 @@ def balance(grid):
         if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
             print(f"Left : {left}, Right : {right} CanBalance: {canB}")
             # balanced
+
+            container_count = sum(1 for row in curr_grid for cell in row if cell >= 0)
+            server_logger.info(f"Balance operation completed. Final container count: {container_count}")
+
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):
@@ -342,6 +347,7 @@ def hueristicLoad(grid, toUnload, toLoad):
     
 
 def loadUnload(grid, toUnload, toLoad):
+    server_logger.info("Starting Load/Unload algorithm")
     heap = []
     npGrid = np.array(grid)
     global numOfStates
@@ -362,6 +368,8 @@ def loadUnload(grid, toUnload, toLoad):
 
         if(not load and not np.any(unload)):
             # finished
+            container_count = sum(1 for row in curr_grid for cell in row if cell >= 0)
+            server_logger.info(f"Load/Unload operation completed. Final container count: {container_count}")
             return curr_cost, curr_grid, path
         if(count % 100 == 0):
             print(hCost)

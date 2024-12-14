@@ -85,18 +85,6 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     return nameGrid
 
-def manifestToGridLoad(gridContainerClass: list[list[Container]], iDs):
-    numGrid = [[0 for _ in range(12)] for _ in range(8)]
-    for i in range(8):
-        for j in range(12):
-            if gridContainerClass[i][j].get_name() == "NAN":
-                numGrid[i][j] = -2
-                continue
-            elif gridContainerClass[i][j].get_name() == "UNUSED":
-                numGrid[i][j] = -1
-                continue
-            numGrid[i][j] = iDs[gridContainerClass[i][j].get_name]
-
 def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -569,21 +557,36 @@ def upload_mainfest():
             return jsonify({'error': "Upload operation failed"}), 500
     else:
         try:
-            # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase6.txt"
+            f = open("./globals/path.txt", "r")
+            manifest_name = f.read().strip()
+            f.close()
+            manifest_path = "./manifests/" + manifest_name
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
             
             simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
-            #print(simpleGrid)
+            print(simpleGrid)
             soln = balance(numericalGrid)
+            with open("./globals/weights.txt", 'w') as file:
+                for weights in soln[1]:
+                    for weight in weights:
+                        file.write(f"{weight}\n")
             steps = generateSteps(soln[2], simpleGrid)
-            # print(steps) # generated steps by this point for balancing, now we just have to pass it right
+            last_step = steps[-1]
+            with open("./globals/names.txt", 'w') as file:
+                for line in last_step:
+                    for name in line:
+                        file.write(str(name) + "\n")
+            print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
             print(soln[2])
+            #with open("./globals/names.txt", 'w') as file:
+            #    for row in soln[2]:
+            #        for name in row:
+            #            file.write(name + "\n")
             returnItems = [{"steps": steps}, {"moves": soln[2]}]
             return jsonify(returnItems)
         except Exception as e:
@@ -627,27 +630,67 @@ def submit_load():
         return jsonify({"message": "No number of containers provided"}), 400
 
     numLoad = data["numLoad"]
-        
-    manifestName = ""
-    with open("./globals/path.txt", "r") as file:
-        manifestName = file.readline().strip()
-    containersToUnload = []
-    with open("cellsToUnload.txt", "r") as file:
-        containersToUnload = [line.strip() for line in file]
-    manifest_path = "./manifests/" + manifestName
-    containerClassGrid = read_manifest.read_manifest(manifest_path)
-    iDs = createIDS(containerClassGrid)
-    toUnload = createToUnload(containersToUnload, iDs)
-    ship = manifestToGridLoad(containerClassGrid, iDs)
-    solution = loadUnload(ship, toUnload, numLoad)
-    print(f"Solution of load/unload: {solution}")
-
 
     # Handle the logic for the number of containers
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
 
+@app.route("/downloadManifest", methods=["POST","GET"])
+def download_manifest():
+    try:
+        f = open("./globals/path.txt", "r")
+        manifest_name = f.read().strip()
+        f.close()
+        base_name = os.path.splitext(manifest_name)[0]
+        new_path = "./new_manifests/" + base_name + "_OUTBOUND.txt"
+        weights = []
+        names = []
+        with open("./globals/weights.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    weights.append(clean_line)
+        with open("./globals/names.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    names.append(clean_line)
+        with open(new_path, 'w') as file:
+            i, j = 1, 1
+            for weight, name in zip(weights, names):
+                if len(str(j)) == 2:
+                    file.write(f"[0{i},{j}], ")
+                else:
+                    file.write(f"[0{i},0{j}], ")
+                if int(weight) == -1 or int(weight) == -2:
+                    file.write("{0000")
+                else:
+                    range = 5 - len(weight)
+                    file.write("{")
+                    while range > 1:
+                        file.write("0")
+                        range -= 1
+                    file.write(weight)
+                file.write("}, " + name + "\n")
+                if j == 12:
+                    i += 1
+                    j = 1
+                else:
+                    j += 1
+                
+                # keeps printing an extra at 9, so this stops it
+                if i == 9:
+                    break
+        new_name = base_name + "_OUTBOUND.txt"
+        return send_file(
+                new_path,
+                as_attachment=True,
+                download_name=new_name
+            )
+    except Exception as e:
+        server_logger.error("downloadManifest error", error=str(e))
+        return jsonify({'error': "downloadManifest failed"}), 500
 
 if __name__ == "__main__":
     print("hello world")

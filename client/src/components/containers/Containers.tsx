@@ -48,7 +48,7 @@ const Containers = ({ grid, steps }: ContainerProps)  => {
                         );
                     })
                 )}
-            </div>
+                </div>
         </div>
     );
 }

@@ -2,7 +2,8 @@ from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 import heapq
 import copy
-import numpy as np 
+import numpy as np
+import re 
 
 from utils.logger import server_logger
 import os
@@ -339,8 +340,6 @@ def hueristicLoad(grid, toUnload, toLoad):
             toLoad -= 1
     return totalCost
 
-    
-
 def loadUnload(grid, toUnload, toLoad):
     heap = []
     npGrid = np.array(grid)
@@ -451,6 +450,26 @@ def loadUnload(grid, toUnload, toLoad):
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
+def getCellIndex(cell_str):
+    # Use regular expression to extract the first number before the comma
+    match = re.match(r"(\d+),", cell_str)
+    if match:
+        return int(match.group(1))  # Return the first number as an integer
+    else:
+        raise ValueError("Invalid cell format")
+
+def getCellTitle(index):
+    col = index % 12  # Assume there are 12 columns in the grid
+    row = 7 - (index // 12)  # For a 8-row grid, assuming index starts at 0
+    manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+    containerClassGrid = read_manifest.read_manifest(manifest_path)  
+    gridNames = manifestToGrid(containerClassGrid) 
+    
+    try:
+        return gridNames[row][col]  # Get the title from gridNames
+    except IndexError:
+        return "Unknown" 
+    
 def cellsToUnloadFile(selected_cells):
     file_path = "cellsToUnload.txt"
 
@@ -459,10 +478,15 @@ def cellsToUnloadFile(selected_cells):
         os.remove(file_path)
         print(f"{file_path} exists and was deleted.")
 
-    # write to a new file
+    # write to a new file with cell titles instead of cell indexes
     with open(file_path, "w") as file:
+        print("file open")
         for cell in selected_cells:
-            file.write(f"{cell}\n")
+            print("in loop")
+            print(cell)
+            index = getCellIndex(cell)
+            cell_title = getCellTitle(index)  # Get the title for the index
+            file.write(f"{cell_title}\n")
 
     print("Unload clicked and data saved to cellsToUnload.txt")
 
@@ -601,7 +625,7 @@ def unload_action():
         return jsonify({"message": "No cells provided"}), 400
 
     selected_cells = data["selectedCells"]
-
+    cellsToUnloadFile(selected_cells)
     # Send confirmation message first
     confirmation = f"Confirm: Unload {len(selected_cells)} containers"
     print(confirmation)
@@ -635,6 +659,20 @@ def submit_load():
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
+
+@app.route("/getGridNames", methods=["GET"])
+def get_grid_names():
+    try:
+        manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+        
+        gridNames = manifestToGrid(containerClassGrid) 
+        return jsonify({'gridNames': gridNames}) #send to front-end
+
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 
 @app.route("/downloadManifest", methods=["POST","GET"])
 def download_manifest():
@@ -691,6 +729,7 @@ def download_manifest():
     except Exception as e:
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
+
 
 if __name__ == "__main__":
     print("hello world")

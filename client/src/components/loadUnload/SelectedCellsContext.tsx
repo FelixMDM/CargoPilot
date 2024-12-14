@@ -1,32 +1,24 @@
 "use client";
 import React, { createContext, useContext, useState } from "react";
 
-// Define the context type
-interface SelectedCellsContextType {
-  selectedCells: Set<string>;
-  setSelectedCells: React.Dispatch<React.SetStateAction<Set<string>>>;
-  getSelectedCells: () => string[];
-}
+// Create Context for selectedCellsId
+const SelectedCellsContext = createContext<{
+  selectedCellsId: Set<string>;
+  setSelectedCellsId: React.Dispatch<React.SetStateAction<Set<string>>>;
+} | null>(null);
 
-// create the context
-const SelectedCellsContext = createContext<SelectedCellsContextType | undefined>(undefined);
-
-// context provider component
+// Provider Component
 export const SelectedCellsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
-
-  const getSelectedCells = () => {
-    return Array.from(selectedCells); // convert set to array
-  };
+  const [selectedCellsId, setSelectedCellsId] = useState<Set<string>>(new Set());
 
   return (
-    <SelectedCellsContext.Provider value={{ selectedCells, setSelectedCells, getSelectedCells }}>
+    <SelectedCellsContext.Provider value={{ selectedCellsId, setSelectedCellsId }}>
       {children}
     </SelectedCellsContext.Provider>
   );
 };
 
-// custom hook to use the context
+// Hook for consuming the context
 export const useSelectedCells = () => {
   const context = useContext(SelectedCellsContext);
   if (!context) {

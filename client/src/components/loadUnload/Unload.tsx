@@ -3,16 +3,17 @@ import React, { useState } from "react";
 import Containers from "../containers/containersLoadUnload";
 import { useSelectedCells } from "./SelectedCellsContext";
 
-const Unload = () => {
+const Unload = ({ nextStepsPage }) => {
   const [unload, setUnload] = useState(false);
   const [numLoad, setNumLoad] = useState<number>(0); // For the number of containers
   const [askNumLoad, setAskNumLoad] = useState(false); // To control visibility of popup
-  const { getSelectedCells } = useSelectedCells();
+  const { selectedCellsId } = useSelectedCells(); // Use selectedCellsId directly
 
   const handleUnload = async () => {
     setUnload(true);
-    const selectedCellsArray = getSelectedCells();
-  
+
+    const selectedCellsArray = Array.from(selectedCellsId); // Convert Set to array for the API
+
     try {
       const response = await fetch("http://localhost:8080/unloadAction", {
         method: "POST",
@@ -21,11 +22,11 @@ const Unload = () => {
         },
         body: JSON.stringify({ selectedCells: selectedCellsArray }), // Send selectedCells in the request body
       });
-  
+
       const data = await response.json();
       console.log(data.message); // Log the server message
       const isConfirmed = window.confirm(data.message); // Show confirmation pop-up
-  
+
       if (isConfirmed) {
         // Send a second request to actually unload the data (write to the file)
         const confirmResponse = await fetch("http://localhost:8080/confirmUnload", {
@@ -35,7 +36,7 @@ const Unload = () => {
           },
           body: JSON.stringify({ selectedCells: selectedCellsArray }),
         });
-  
+
         const confirmData = await confirmResponse.json();
         console.log(confirmData.message); // Log the confirm message
 
@@ -50,7 +51,6 @@ const Unload = () => {
   };
 
   const handleSubmitContainers = async () => {
-    
     try {
       const response = await fetch("http://localhost:8080/submitLoad", {
         method: "POST",
@@ -63,6 +63,7 @@ const Unload = () => {
       const data = await response.json();
       console.log(data.message);
       alert("Containers submitted successfully!");
+      nextStepsPage();
       setAskNumLoad(false); // Close the popup after submission
     } catch (error) {
       console.error("Error submitting number of containers:", error);
@@ -76,7 +77,7 @@ const Unload = () => {
       </div>
 
       <div className="flex flex-row mt-[5%] justify-evenly">
-        <Containers />
+        <Containers selectable={true} />
         <div className="flex flex-col w-[10%] space-y-[15%] items-center">
           <button
             onClick={handleUnload}

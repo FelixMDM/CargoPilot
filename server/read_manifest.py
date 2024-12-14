@@ -48,9 +48,9 @@ def read_manifest(input_file):
         container = Container([x,y], weight, row[2])
         grid[x-1][y-1] = container
 
-    for row in range(8):
-        for col in range(12):
-            grid[row][col].print_container()
+    # for row in range(8):
+    #     for col in range(12):
+    #         grid[row][col].print_container()
 
     return grid
 

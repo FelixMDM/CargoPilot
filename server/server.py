@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 import heapq
 import copy
+import numpy as np 
 
 from utils.logger import server_logger
 import os
@@ -63,8 +64,18 @@ def createToUnload(toUnload, iDs):
     return dict
 
 def manifestToGrid(gridContainerClass: list[list[Container]]):
+    # take the container class from the read manfiest function, generate a names only representation of this
+    nameGrid = [[0 for _ in range(12)] for _ in range(8)]
+
+    for i in range(8):
+        for j in range(12):
+            nameGrid[i][j] = gridContainerClass[i][j].get_name()
+
+    return nameGrid
+
+def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
-    numericalGrid = [[0 for _ in range(12)] for _ in range(8)]
+    numGrid = [[0 for _ in range(12)] for _ in range(8)]
 
     for i in range(8):
         for j in range(12):
@@ -76,7 +87,23 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
                 continue
             numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
 
-    return numericalGrid
+    return numGrid
+
+def generateSteps(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        startR, startC = soln[i][0], soln[i][1]
+        endR, endC = soln[i][2], soln[i][3]
+        nextStep = copy.deepcopy(steps[i])
+
+        tmp = nextStep[endR][endC]
+        nextStep[endR][endC] = nextStep[startR][startC]
+        nextStep[startR][startC] = tmp
+
+        steps.append(nextStep)
+    return steps
 
 def hueristicBalance(grid):
     # return 1
@@ -435,36 +462,46 @@ def return_home():
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
 
-@app.route("/uploadManifest", methods = ["POST"])
+@app.route("/uploadManifest", methods = ["POST", "GET"])
 def upload_mainfest():
-    try:
-        manifest = request.files['manifest']
+    if request.method == "POST":
+        try:
+            manifest = request.files['manifest']
 
-        # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
-        manifest_path = "./manifests/" + manifest.filename
-        manifest.save(manifest_path)
+            # here we are saving the manifest to a specified folder in our repo so we have our manifests for later access
+            manifest_path = "./manifests/" + manifest.filename
+            manifest.save(manifest_path)
 
-        # pass the actual manifest file that's presumable cached into the balance function
-        containerClassGrid = read_manifest.read_manifest(manifest_path)
-        numericalGrid = manifestToGrid(containerClassGrid)
+            # find a way to pass this back to the FE
 
-        for i in range(8):
-            for j in range(12):
-                print(numericalGrid[i][j])
-            print("\n")
+            # log to the user that the manifest was uplpoaded
+            return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
+        except Exception as e:
+            server_logger.error("Upload manifest error", error=str(e))
+            return jsonify({'error': "Upload operation failed"}), 500
+    else:
+        try:
+            # grab the manifest file that we need to use
+            manifest_path = "./manifests/ShipCase2.txt"
 
-        for i in range(8):
-            for j in range(12):
-                print(containerClassGrid[i][j].get_weight())
-            print("\n")
+            # pass the actual manifest file that's presumable cached into the balance function
+            containerClassGrid = read_manifest.read_manifest(manifest_path)
+            
+            simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
+            numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
+            print(simpleGrid)
 
-        balance(numericalGrid)
-
-        # log to the user that the manifest was uplpoaded
-        return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
-    except Exception as e:
-        server_logger.error("Upload manifest error", error=str(e))
-        return jsonify({'error': "Upload operation failed"}), 500
+            soln = balance(numericalGrid)
+            steps = generateSteps(soln[2], simpleGrid)
+            print(steps) # generated steps by this point for balancing, now we just have to pass it right
+            # print(numericalGrid)
+            # print(containerClassGrid)
+            print(soln[2])
+            returnItems = [{"steps": steps}, {"moves": soln[2]}]
+            return jsonify(returnItems)
+        except Exception as e:
+            server_logger.error("Error fetching manifest", error=str(e))
+            return jsonify({'error': "Fetch failed for manifest"}), 500
       
 
 if __name__ == "__main__":

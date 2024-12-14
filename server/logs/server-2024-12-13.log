@@ -1,0 +1,12 @@
+2024-12-13 16:19:49 - INFO - test: test message
+2024-12-13 16:19:49 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:19:49 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:21:21 - INFO - test: test message
+2024-12-13 16:21:21 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:21:21 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:22:38 - INFO - test: test message
+2024-12-13 16:22:38 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:22:38 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:24:14 - INFO - test: test message
+2024-12-13 16:24:14 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:24:14 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}

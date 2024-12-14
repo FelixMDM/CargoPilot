@@ -50,6 +50,21 @@ def createIDS(grid: list[list[Container]]):
                 count += 1
     return dict
 
+
+# Testing Function
+def add_numbers(a: int, b: int) -> int:
+    """Simple function to test pytest"""
+    return a + b
+
+#Testing Func 2
+def is_balanced(left_weight: int, right_weight: int) -> bool:
+    """Simple function to test if weights are balanced within 10%"""
+    if left_weight == 0 or right_weight == 0:
+        return False
+    difference = abs(left_weight - right_weight)
+    larger = max(left_weight, right_weight)
+    return (difference / larger) < 0.1
+
 # Creating a fucntion that takes in a list of container names that are to be unloaded, and the IDs created above
 # it will output a new dictionary that is how many of each container to remove based on it's ID
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings

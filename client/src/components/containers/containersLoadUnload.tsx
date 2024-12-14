@@ -6,8 +6,8 @@ interface ContainersProps {
   selectable?: boolean; }
 
 const Containers: React.FC<ContainersProps> = ({ selectable }) => {
-  const { selectedCells, setSelectedCells } = useSelectedCells();
-  const [selectedCellsId, setSelectedCellsId] = useState<Set<string>>(new Set()); // cell IDs to handle same name selections
+  //const { selectedCells, setSelectedCells } = useSelectedCells();
+  const { selectedCellsId, setSelectedCellsId } = useSelectedCells(); // cell IDs to handle same name selections
   const [gridNames, setGridNames] = useState<string[][]>([]); //store container names 
   const [loading, setLoading] = useState<boolean>(true); 
 
@@ -48,15 +48,7 @@ const Containers: React.FC<ContainersProps> = ({ selectable }) => {
       }
       return newSelectedIds;
     });
-
-    setSelectedCells((prevSelectedCells) => {
-      const newSelectedCells = new Set (prevSelectedCells); // Copy the array
-      newSelectedCells.add(cellTitle);
-      
-      return newSelectedCells; // Update state with new array
-    });
   }
-    
 
   return (
     <div className="flex flex-col items-center">

@@ -31,3 +31,15 @@ def test_balance_endpoint():
     client = app.test_client()
     response = client.get('/balance')
     assert response.status_code == 200
+
+def test_loadUnload_endpoint():
+    """Test the balance endpoint"""
+    client = app.test_client()
+    response = client.get('/loadUnload')
+    assert response.status_code == 200
+
+def test_download_logs_endpoint():
+    """Test the balance endpoint"""
+    client = app.test_client()
+    response = client.get('/download-logs')
+    assert response.status_code == 200

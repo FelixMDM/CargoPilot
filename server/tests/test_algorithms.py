@@ -3,21 +3,53 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from server import hueristicBalance, loadUnload, balance
+from server import hueristicBalance, loadUnload, balance, canBalance
 
 def test_hueristic_balance():
     """Test hueristicBalance function"""
     # Create a balanced grid properly
     balanced_grid = [[0 for _ in range(12)] for _ in range(8)]
-    balanced_grid[0][0] = 100  # Left side
-    balanced_grid[0][6] = 100  # Right side
+    balanced_grid[0][0] = 100  # 100 on left side
+    balanced_grid[0][11] = 100  # 100 on right side
+    assert hueristicBalance(balanced_grid) == 0  # Should be balanced
+
+    # Create a balanced grid properly
+    balanced_grid = [[0 for _ in range(12)] for _ in range(8)]
+    balanced_grid[0][0] = 100
+    balanced_grid[0][1] = 100
+    balanced_grid[0][2] = 100
+    balanced_grid[0][3] = 100
+    balanced_grid[0][4] = 100
+    balanced_grid[0][5] = 100
+    balanced_grid[0][6] = 100
+    balanced_grid[0][7] = 100
+    balanced_grid[0][8] = 100
+    balanced_grid[0][9] = 100
+    balanced_grid[0][10] = 100
+    balanced_grid[0][11] = 100
     assert hueristicBalance(balanced_grid) == 0  # Should be balanced
     
     # Create an unbalanced grid
     unbalanced_grid = [[0 for _ in range(12)] for _ in range(8)]
     unbalanced_grid[0][0] = 200  # Left side heavier
-    unbalanced_grid[0][6] = 100  # Right side lighter
+    unbalanced_grid[0][11] = 100  # Right side lighter
     assert hueristicBalance(unbalanced_grid) > 0  # Should be unbalanced
+
+    # Create a balanced grid properly
+    unbalanced_grid = [[0 for _ in range(12)] for _ in range(8)]
+    unbalanced_grid[0][0] = 100
+    unbalanced_grid[0][1] = 100
+    unbalanced_grid[0][2] = 100
+    unbalanced_grid[0][3] = 100
+    unbalanced_grid[0][4] = 100
+    unbalanced_grid[0][5] = 100
+    unbalanced_grid[0][6] = 100
+    unbalanced_grid[0][7] = 100
+    unbalanced_grid[0][8] = 100
+    unbalanced_grid[0][9] = 100
+    unbalanced_grid[0][10] = 100
+    unbalanced_grid[0][11] = 1000
+    assert hueristicBalance(unbalanced_grid) > 0  # Should be unbalanced (right is heavier)
 
 # tests/test_algorithms.py
 def test_balance():
@@ -57,3 +89,23 @@ def test_load_unload():
     cost, final_grid, path = result
     assert cost >= 0
     assert len(path) > 0
+
+def test_can_balance():
+    """Test the canBalance function with a simple grid"""
+    test_grid = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [100, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0],  # Equal weights on both sides
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+    result, _, _ = canBalance(test_grid)
+    assert result == True
+
+    # Test unbalanced grid
+    test_grid[1][0] = 200  # Make left side heavier
+    result, _, _ = canBalance(test_grid)
+    assert result == False

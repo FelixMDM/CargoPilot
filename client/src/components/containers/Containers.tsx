@@ -38,10 +38,12 @@ const Containers = ({ grid, steps }: ContainerProps)  => {
                             cellClass += " bg-black text-white";
                         }
 
+                        // cellClass += "border-black"
+
                         return (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={cellClass}
+                                className={`${cellClass} border border-black`}
                             >
                                 {name}
                             </div>

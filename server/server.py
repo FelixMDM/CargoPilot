@@ -80,12 +80,12 @@ def manifestToNum(gridContainerClass: list[list[Container]]):
     for i in range(8):
         for j in range(12):
             if gridContainerClass[i][j].get_name() == "NAN":
-                numericalGrid[i][j] = -2
+                numGrid[i][j] = -2
                 continue
             elif gridContainerClass[i][j].get_name() == "UNUSED":
-                numericalGrid[i][j] = -1
+                numGrid[i][j] = -1
                 continue
-            numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
+            numGrid[i][j] = gridContainerClass[i][j].get_weight()
 
     return numGrid
 
@@ -482,7 +482,7 @@ def upload_mainfest():
     else:
         try:
             # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase2.txt"
+            manifest_path = "./manifests/ShipCase1.txt"
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
@@ -513,5 +513,5 @@ if __name__ == "__main__":
     print(solution[2])
     print(solution[1])
 
-    # app.run(debug=True, port=8080)
+    app.run(debug=True, port=8080)
 

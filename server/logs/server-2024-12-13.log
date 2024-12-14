@@ -10,3 +10,19 @@
 2024-12-13 16:24:14 - INFO - test: test message
 2024-12-13 16:24:14 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
 2024-12-13 16:24:14 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:01:25 - INFO - test: test message
+2024-12-13 18:01:25 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:01:25 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:01:25 - INFO - LoadUnload endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:14:15 - INFO - test: test message
+2024-12-13 18:14:15 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:14:15 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:14:15 - INFO - LoadUnload endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:14:15 - INFO - None: None
+2024-12-13 18:14:15 - ERROR - Upload manifest error - {'error': '400 Bad Request: The browser (or proxy) sent a request that this server could not understand.'}
+2024-12-13 18:16:45 - INFO - test: test message
+2024-12-13 18:16:45 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:16:45 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:16:45 - INFO - LoadUnload endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 18:16:45 - INFO - None: None
+2024-12-13 18:16:45 - ERROR - Upload manifest error - {'error': '400 Bad Request: The browser (or proxy) sent a request that this server could not understand.'}

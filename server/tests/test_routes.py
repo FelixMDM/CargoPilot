@@ -43,3 +43,15 @@ def test_download_logs_endpoint():
     client = app.test_client()
     response = client.get('/download-logs')
     assert response.status_code == 200
+
+def test_invalid_log_payload():
+    client = app.test_client()
+    response = client.post('/log', json={}, content_type='application/json')  # Missing fields
+    assert response.status_code == 200  # Accepts incomplete payloads
+    assert b"status" in response.data  # Check that it responds with a success message
+
+def test_missing_file_upload():
+    client = app.test_client()
+    response = client.post('/uploadManifest', content_type='multipart/form-data')  # No file
+    assert response.status_code == 500
+    assert b"Upload operation failed" in response.data

@@ -8,15 +8,15 @@ interface SelectedCellsContextType {
   getSelectedCells: () => string[];
 }
 
-// Create the context
+// create the context
 const SelectedCellsContext = createContext<SelectedCellsContextType | undefined>(undefined);
 
-// Context provider component
+// context provider component
 export const SelectedCellsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
 
   const getSelectedCells = () => {
-    return Array.from(selectedCells); // Convert Set to array
+    return Array.from(selectedCells); // convert set to array
   };
 
   return (
@@ -26,7 +26,7 @@ export const SelectedCellsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Custom hook to use the context
+// custom hook to use the context
 export const useSelectedCells = () => {
   const context = useContext(SelectedCellsContext);
   if (!context) {

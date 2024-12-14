@@ -444,15 +444,15 @@ def loadUnload(grid, toUnload, toLoad):
 def cellsToUnloadFile(selected_cells):
     file_path = "cellsToUnload.txt"
 
-    # Check if the file exists and delete it
+    # check if the file exists and delete it to write a new one
     if os.path.exists(file_path):
         os.remove(file_path)
         print(f"{file_path} exists and was deleted.")
 
-    # Write to a new file
+    # write to a new file
     with open(file_path, "w") as file:
         for cell in selected_cells:
-            file.write(cell + "\n")
+            file.write(f"{cell}\n")
 
     print("Unload clicked and data saved to cellsToUnload.txt")
 

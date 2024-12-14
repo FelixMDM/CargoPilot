@@ -9,13 +9,14 @@ const Containers = () => {
   // Function to handle cell selection
   const handleCellClick = (row: number, col: number, index: number) => {
     const cellId = `${index}, (${row}, ${col})`; // Store index and (x, y) as a string
+    const cellTitle = `${numberToString(index)}`; // use the title of the container instead of index, posX, posY
 
     setSelectedCells((prevSelectedCells) => {
       const newSelectedCells = new Set(prevSelectedCells);
-      if (newSelectedCells.has(cellId)) {
-        newSelectedCells.delete(cellId); // Remove if already selected (unselect)
+      if (newSelectedCells.has(cellTitle)) {
+        newSelectedCells.delete(cellTitle); // Remove if already selected (unselect)
       } else {
-        newSelectedCells.add(cellId); // Add if not selected (select)
+        newSelectedCells.add(cellTitle); // Add if not selected (select)
       }
       return newSelectedCells;
     });
@@ -29,7 +30,8 @@ const Containers = () => {
           const row = 7 - Math.floor(index / 12);
 
           const cellId = `${index}, (${row}, ${col})`;
-          const isSelected = selectedCells.has(cellId);
+          const cellTitle = `${numberToString(index)}`
+          const isSelected = selectedCells.has(cellTitle);
 
           return (
             <button

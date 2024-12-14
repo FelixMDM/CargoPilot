@@ -505,13 +505,13 @@ def upload_mainfest():
       
 
 if __name__ == "__main__":
-    # print("hello world")
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    # print("goodbye world")
-    # print(solution[0])
-    # print(solution[2])
-    # print(solution[1])
+    print("hello world")
+    solution = balance(grid)
+    print(hueristicBalance(grid))
+    print("goodbye world")
+    print(solution[0])
+    print(solution[2])
+    print(solution[1])
 
     app.run(debug=True, port=8080)
 

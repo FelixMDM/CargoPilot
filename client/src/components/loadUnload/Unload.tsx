@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Containers from "../containers/containersLoadUnload";
 import { useSelectedCells } from "./SelectedCellsContext";
 
-const Unload = () => {
+const Unload = ({ nextStepsPage }) => {
   const [unload, setUnload] = useState(false);
   const [numLoad, setNumLoad] = useState<number>(0); // For the number of containers
   const [askNumLoad, setAskNumLoad] = useState(false); // To control visibility of popup
@@ -63,6 +63,7 @@ const Unload = () => {
       const data = await response.json();
       console.log(data.message);
       alert("Containers submitted successfully!");
+      nextStepsPage();
       setAskNumLoad(false); // Close the popup after submission
     } catch (error) {
       console.error("Error submitting number of containers:", error);

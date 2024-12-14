@@ -57,7 +57,7 @@ const Unload = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ numLoad }),
+        body: JSON.stringify({ numLoad: Number }),
       });
 
       const data = await response.json();

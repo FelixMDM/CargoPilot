@@ -443,6 +443,19 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells)
 
     return jsonify({"message": "Unload action completed and data saved"}), 200
+@app.route("/submitLoad", methods=["POST"])
+def submit_load():
+    data = request.get_json()
+
+    if not data or "numLoad" not in data:
+        return jsonify({"message": "No number of containers provided"}), 400
+
+    numLoad = data["numLoad"]
+
+    # Handle the logic for the number of containers
+    print(f"Number of containers to load: {numLoad}")
+
+    return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
 
 
 if __name__ == "__main__":

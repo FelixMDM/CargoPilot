@@ -557,8 +557,10 @@ def upload_mainfest():
             return jsonify({'error': "Upload operation failed"}), 500
     else:
         try:
-            # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase1.txt"
+            f = open("./globals/path.txt", "r")
+            manifest_name = f.read().strip()
+            f.close()
+            manifest_path = "./manifests/" + manifest_name
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
@@ -572,6 +574,11 @@ def upload_mainfest():
                     for weight in weights:
                         file.write(f"{weight}\n")
             steps = generateSteps(soln[2], simpleGrid)
+            last_step = steps[-1]
+            with open("./globals/names.txt", 'w') as file:
+                for line in last_step:
+                    for name in line:
+                        file.write(str(name) + "\n")
             print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
@@ -638,22 +645,43 @@ def download_manifest():
         base_name = os.path.splitext(manifest_name)[0]
         new_path = "./new_manifests/" + base_name + "_OUTBOUND.txt"
         weights = []
+        names = []
         with open("./globals/weights.txt", "r") as file:
             for line in file:
                 clean_line = line.strip()
                 if clean_line:
                     weights.append(clean_line)
+        with open("./globals/names.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    names.append(clean_line)
         with open(new_path, 'w') as file:
-            for weight in weights:
+            i, j = 1, 1
+            for weight, name in zip(weights, names):
+                if len(str(j)) == 2:
+                    file.write(f"[0{i},{j}], ")
+                else:
+                    file.write(f"[0{i},0{j}], ")
                 if int(weight) == -1 or int(weight) == -2:
-                    file.write("{0000}\n")
+                    file.write("{0000")
                 else:
                     range = 5 - len(weight)
                     file.write("{")
                     while range > 1:
                         file.write("0")
                         range -= 1
-                    file.write(weight + "}\n")
+                    file.write(weight)
+                file.write("}, " + name + "\n")
+                if j == 12:
+                    i += 1
+                    j = 1
+                else:
+                    j += 1
+                
+                # keeps printing an extra at 9, so this stops it
+                if i == 9:
+                    break
         new_name = base_name + "_OUTBOUND.txt"
         return send_file(
                 new_path,

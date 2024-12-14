@@ -95,7 +95,7 @@ def test_empty_grid_balance():
     """Test balance function with an empty grid"""
     empty_grid = [[0 for _ in range(12)] for _ in range(8)]
     result = balance(empty_grid)
-    assert result == (0, empty_grid, [])  # Adjust expected output to match current behavior
+    assert result == (0, empty_grid, []) 
 
 def test_single_container_balance():
     """Test balance function with a single container"""
@@ -134,7 +134,7 @@ def test_load_unload():
 def test_unload_nonexistent_container():
     grid = [[0 for _ in range(12)] for _ in range(8)]
     result = loadUnload(grid, {"999": 1}, 0)  # Unload non-existent container ID
-    assert result is None  # Should gracefully handle it
+    assert result is None  # Should handle it
 
 def test_can_balance():
     """Test the canBalance function with a simple grid"""

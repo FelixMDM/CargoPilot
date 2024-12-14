@@ -47,7 +47,7 @@ def test_download_logs_endpoint():
 def test_invalid_log_payload():
     client = app.test_client()
     response = client.post('/log', json={}, content_type='application/json')  # Missing fields
-    assert response.status_code == 200  # Accepts incomplete payloads
+    assert response.status_code == 200
     assert b"status" in response.data  # Check that it responds with a success message
 
 def test_duplicate_log_messages():

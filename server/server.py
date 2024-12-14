@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 import heapq
 import copy
+import numpy as np 
 
 from utils.logger import server_logger
 import os
@@ -404,6 +405,8 @@ def upload_mainfest():
             manifest_path = "./manifests/" + manifest.filename
             manifest.save(manifest_path)
 
+            # find a way to pass this back to the FE
+
             # log to the user that the manifest was uplpoaded
             return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
         except Exception as e:
@@ -412,7 +415,7 @@ def upload_mainfest():
     else:
         try:
             # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase1.txt"
+            manifest_path = "./manifests/ShipCase2.txt"
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
@@ -426,7 +429,9 @@ def upload_mainfest():
             print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
-            return jsonify(steps)
+            print(soln[2])
+            returnItems = [{"steps": steps}, {"moves": soln[2]}]
+            return jsonify(returnItems)
         except Exception as e:
             server_logger.error("Error fetching manifest", error=str(e))
             return jsonify({'error': "Fetch failed for manifest"}), 500

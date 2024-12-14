@@ -40,7 +40,12 @@ const Containers: React.FC<ContainersProps> = ({ selectable }) => {
 
     setSelectedCellsId((prevSelectedIds) => {
       const newSelectedIds = new Set(prevSelectedIds);
-      newSelectedIds.add(cellId); // select the cell in the ID set
+      if (prevSelectedIds.has(cellId)) {
+        newSelectedIds.delete(cellId);
+      }
+      else {
+        newSelectedIds.add(cellId); // select the cell in the ID set
+      }
       return newSelectedIds;
     });
 

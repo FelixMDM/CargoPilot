@@ -18,14 +18,14 @@ from read_manifest import Container
 
 # # to kill venv process: deactivate
 
-grid = [[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
+        [-1, -1, 51, -1, 21, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 15, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
 unload = {"1": 3}
 load = 1
@@ -37,6 +37,32 @@ load = 1
 #     })
 
 # begin funcs
+# Creating a function that will take each container in the grid and give it an ID based on it's name.
+# Duplicate names get the same ID
+def createIDS(grid: list[list[Container]]):
+    count = 0
+    dict = {}
+    for row in grid:
+        for col in row:
+            if col.get_name() in dict:
+                continue
+            else:
+                dict[col.get_name()] = count
+                count += 1
+    return dict
+
+# Creating a fucntion that takes in a list of container names that are to be unloaded, and the IDs created above
+# it will output a new dictionary that is how many of each container to remove based on it's ID
+# We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
+def createToUnload(toUnload, iDs):
+    dict = {}
+    for container in toUnload:
+        if iDs[container] in dict:
+            dict[iDs[container]] +=1
+        else:
+            dict[iDs[container]] = 1 
+    return dict
+
 def manifestToGrid(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a names only representation of this
     nameGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -53,7 +79,13 @@ def manifestToNum(gridContainerClass: list[list[Container]]):
 
     for i in range(8):
         for j in range(12):
-            numGrid[i][j] = gridContainerClass[i][j].get_weight()
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numericalGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numericalGrid[i][j] = -1
+                continue
+            numericalGrid[i][j] = gridContainerClass[i][j].get_weight()
 
     return numGrid
 
@@ -74,6 +106,7 @@ def generateSteps(soln, startGrid):
     return steps
 
 def hueristicBalance(grid):
+    # return 1
     leftSum = 0
     rightSum = 0
     right = []
@@ -121,7 +154,26 @@ def hueristicBalance(grid):
 
     
 def canBalance(grid): # first we will check if can be balanced, if so it will just return true, otherwise it will return true, and (0, 0) otherwise, false nad (leftweight, rightweight) wieghts after sift
-    return True
+    weights = []
+    for i in range(6):
+            for j in range(8):
+                if grid[j][i] >= 0:
+                    weights.append(grid[j][i])
+                if grid[j][i + 6] >= 0:
+                    weights.append(grid[j][i + 6])
+    weights.sort(reverse=True)
+    left = 0
+    right = 0
+    for i in range(len(weights)):
+        if i % 2 == 0:
+            left += weights[i]
+        else:
+            right += weights[i]
+    if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
+        return True, 0, 0
+    print(f"Left Goal: {left}, Right Goal: {right}")
+    return False, left, right
+    
 def balance(grid):
     # create a queue
     # add start state to queue
@@ -130,6 +182,7 @@ def balance(grid):
         # check if it is goal
         # if goal break
         # for each possible move, add it to the queue.
+    canB, leftGoal, rightGoal =canBalance(grid)
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
@@ -148,18 +201,25 @@ def balance(grid):
         right = 0
         for i in range(6):
             for j in range(8):
-                if curr_grid[j][i]:
+                if curr_grid[j][i] >= 0:
                     topContainers[i] = j
-                if curr_grid[j][i + 6]:
+                    left += curr_grid[j][i]
+                elif curr_grid[j][i] == -2:
+                    topContainers[i] = j
+                if curr_grid[j][i + 6] >= 0:
                     topContainers[i + 6] = j
-                left += curr_grid[j][i]
-                right += curr_grid[j][i + 6]
-        if(left != 0 and right != 0 and abs(left - right) / left < 0.1):
+                    right += curr_grid[j][i + 6]
+                elif curr_grid[j][i + 6] == -2:
+                    topContainers[i + 6] = j
+        if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
+            print(f"Left : {left}, Right : {right}")
             # balanced
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):
             if topContainers[i] == -1:
+                continue
+            elif curr_grid[topContainers[i]][i] == -2:
                 continue
             index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -199,10 +259,17 @@ def balance(grid):
                 # moving container from top of column i, to top of column j
                 newgrid = [row[:] for row in curr_grid]
                 newgrid[k][j] = newgrid[index][i]
-                newgrid[index][i] = 0
+                newgrid[index][i] = -1
                 heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
-                
     return None
+
+def balanceOutput(grid: list[list[Container]], steps):
+    output = [grid]
+    for item in steps:
+        newgrid = [row[:] for row in output[-1]]
+        newgrid[item[2]][item[3]] = output[-1][item[0]][item[1]]
+        newgrid[item[0]][item[1]] = 0
+        output += [newgrid]
 
 def hueristicLoad(grid, toUnload, toLoad):
     if(not toUnload and not toLoad):
@@ -438,14 +505,13 @@ def upload_mainfest():
       
 
 if __name__ == "__main__":
-    # print("hello world")
-    # print(hueristicBalance(grid))
-    # print("goodbye world")
-    # solution = balance(grid)
-    # soln = solution[2]
+    print("hello world")
+    solution = balance(grid)
+    print(hueristicBalance(grid))
+    print("goodbye world")
+    print(solution[0])
+    print(solution[2])
+    print(solution[1])
 
-    # steps = generateSteps(soln, grid)
-    # print(steps)
-
-    app.run(debug=True, port=8080)
+    # app.run(debug=True, port=8080)
 

@@ -17,9 +17,27 @@ const ContainersPanel = ()  => {
 
     const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
     const [moves, setMoves] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
-
     const [comments, setComments] = useState<string>("");
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    const logToServer = async (message: string, level: string) => {
+        try {
+            await fetch('http://localhost:8080/log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message,
+                    level,
+                    component: 'ContainersPanel',
+                    timestamp: new Date().toISOString()
+                })
+            });
+        } catch (error) {
+            console.error('Failed to send log to server:', error);
+        }
+    };
 
     const grids: number[][][] = [
         [
@@ -47,10 +65,11 @@ const ContainersPanel = ()  => {
         setCurrentIndex((prevIndex) => (prevIndex - 1 + grids.length) % grids.length);
     };
 
-    const handleSubmit = (event: React.FormEvent<CommentFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<CommentFormElement>) => {
         event.preventDefault();
         const commentValue = event.currentTarget.elements.comments.value;
-        console.log("Submitted Comment:", commentValue);
+        
+        await logToServer(`User submitted comment: "${commentValue}"`, 'info');
         setComments("");
     };
 

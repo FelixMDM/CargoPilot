@@ -567,11 +567,19 @@ def upload_mainfest():
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
             print(simpleGrid)
             soln = balance(numericalGrid)
+            with open("./globals/weights.txt", 'w') as file:
+                for weights in soln[1]:
+                    for weight in weights:
+                        file.write(f"{weight}\n")
             steps = generateSteps(soln[2], simpleGrid)
             print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
             print(soln[2])
+            #with open("./globals/names.txt", 'w') as file:
+            #    for row in soln[2]:
+            #        for name in row:
+            #            file.write(name + "\n")
             returnItems = [{"steps": steps}, {"moves": soln[2]}]
             return jsonify(returnItems)
         except Exception as e:
@@ -629,8 +637,23 @@ def download_manifest():
         f.close()
         base_name = os.path.splitext(manifest_name)[0]
         new_path = "./new_manifests/" + base_name + "_OUTBOUND.txt"
+        weights = []
+        with open("./globals/weights.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    weights.append(clean_line)
         with open(new_path, 'w') as file:
-            file.write("hello")
+            for weight in weights:
+                if int(weight) == -1 or int(weight) == -2:
+                    file.write("{0000}\n")
+                else:
+                    range = 5 - len(weight)
+                    file.write("{")
+                    while range > 1:
+                        file.write("0")
+                        range -= 1
+                    file.write(weight + "}\n")
         new_name = base_name + "_OUTBOUND.txt"
         return send_file(
                 new_path,

@@ -232,6 +232,7 @@ def balance(grid):
         # check if it is goal
         # if goal break
         # for each possible move, add it to the queue.
+    server_logger.info("Starting balance algorithm")
     heap = []
     heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
@@ -264,6 +265,13 @@ def balance(grid):
         if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
             print(f"Left : {left}, Right : {right} CanBalance: {canB}")
             # balanced
+            steps = generateSteps(path, manifestToGrid(grid))
+            final_grid = steps[-1]
+            container_count = sum(1 for row in final_grid for cell in row 
+                                if cell != "UNUSED" and cell != "NAN")
+            
+            server_logger.info("Balance operation completed")
+            server_logger.info(f"Final container count: {container_count}")
             return curr_cost, curr_grid, path
         maxToContainer = -1
         for i in range(12):

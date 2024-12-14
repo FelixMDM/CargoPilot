@@ -545,17 +545,17 @@ def upload_mainfest():
     else:
         try:
             # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase1.txt"
+            manifest_path = "./manifests/ShipCase6.txt"
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
             
             simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
-            print(simpleGrid)
+            #print(simpleGrid)
             soln = balance(numericalGrid)
             steps = generateSteps(soln[2], simpleGrid)
-            print(steps) # generated steps by this point for balancing, now we just have to pass it right
+            # print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
             print(soln[2])
@@ -610,17 +610,17 @@ def submit_load():
 
 
 if __name__ == "__main__":
-    print("hello world")
-    unload = np.zeros(96)
-    unload[1] = 1
-    unload[3] = 1
+    # print("hello world")
+    # unload = np.zeros(96)
+    # unload[1] = 1
+    # unload[3] = 1
     # solution = loadUnload(grid2, unload, load)
-    solution = balance(grid)
-    print(hueristicBalance(grid))
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
+    # solution = balance(grid)
+    # print(hueristicBalance(grid))
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
 
     app.run(debug=True, port=8080)
 

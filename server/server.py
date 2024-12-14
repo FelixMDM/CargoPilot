@@ -10,7 +10,6 @@ import os
 from datetime import datetime
 import read_manifest
 from read_manifest import Container
-from config import MANIFEST_NAME
 
 from functools import lru_cache
 import numpy as np
@@ -32,9 +31,9 @@ grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-grid2 = [[-2, 1, 2, 3, -1, -1, -1, -1, -1, -1, -1, -2],
-        [1, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid2 = [[-2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -2],
+        [-1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -311,6 +310,9 @@ def balanceOutput(grid: list[list[Container]], steps):
         newgrid[item[0]][item[1]] = 0
         output += [newgrid]
 
+def customKey(item):
+    return item[0]
+
 def hueristicLoad(grid, toUnload, toLoad):
     # return sum(toUnload.values()) * 4 + toLoad * 2 # This is faster but also a larger underestimate of the cost
     count = np.sum(toUnload)
@@ -340,62 +342,67 @@ def hueristicLoad(grid, toUnload, toLoad):
 
 def loadUnload(grid, toUnload, toLoad):
     heap = []
-    heapq.heappush(heap, (0, grid, [], 0, toLoad, toUnload, (8, 0), 1))
+    npGrid = np.array(grid)
+    global numOfStates
+    numOfStates = 0
+    heapq.heappush(heap, (0, numOfStates, npGrid, [], 0, toLoad, toUnload, (8, 0), 1))
     count = 0
     visited = set()
     while(heap):
         count += 1
-        hCost, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
+        hCost, _, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
         unload = toUnload.copy()
-        gridTuple = tuple(tuple(row) for row in curr_grid)
-        if gridTuple in visited:
+        unloadCopy = tuple(unload)  # For immutability in `visited`
+        gridTuple = tuple(map(tuple, curr_grid))  # Immutable grid representation
+        if (gridTuple, unloadCopy) in visited:
             continue
-        visited.add(gridTuple)
+        visited.add((gridTuple, unloadCopy))
+        gridTuple = tuple(tuple(row) for row in curr_grid)
+
+        if(not load and not np.any(unload)):
+            # finished
+            return curr_cost, curr_grid, path
         if(count % 100 == 0):
             print(hCost)
         topContainers = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 , -1]
-        for i in range(6):
-            for j in range(8):
-                if curr_grid[j][i] != -1:
-                    topContainers[i] = j
-                if curr_grid[j][i + 6] != -1:
-                    topContainers[i + 6] = j
-
-        if(not load and not np.sum(unload)):
-            # finished
-            return curr_cost, curr_grid, path
+        for col in range(12):
+            for row in range(8):
+                if curr_grid[row][col] != -1:
+                    topContainers[col] = row
+                else:
+                    break
         maxToContainer = -1
-        for i in range(12):
-            if topContainers[i] == -1:
+        for col, row in enumerate(topContainers):
+            if row == -1:
                 continue
-            elif curr_grid[topContainers[i]][i] == -2:
-                if(load):
-                    if(topContainers[i] < 7):
-                        newgrid = [row[:] for row in curr_grid]
-                        cost = i + 8 - topContainers[i] + 2
-                        newgrid[topContainers[i] + 1][i] = 96 + toLoad - load #give a unique id
-                        if(not craneDocked):
-                            cost += 2 + 8 - pos[0] + pos[1]
-                        heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
+            elif curr_grid[row][col] == -2:
+                if(load and row < 7):
+                    newgrid = np.copy(curr_grid)
+                    cost = 8 - row + col + 2
+                    newgrid[row + 1][col] = 96 + toLoad - load #give a unique id
+                    if(not craneDocked):
+                        cost += 2 + 8 - pos[0] + pos[1]
+                    numOfStates += 1
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
                 continue
-            index = topContainers[i] # this is the row index of the highest container in column i
+
             # first calculate the cost it will take to get from the cranes current position to this specific container
             craneCost = 0
-            if i == pos[1]:
+            if col == pos[1]:
                 maxToContainer = -1
-                craneCost = pos[0] - index
-                if index == pos[0]:
+                craneCost = pos[0] - row
+                if row == pos[0]:
                     craneCost = 0
-            elif(maxToContainer < index or maxToContainer < pos[0]):
-                craneCost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
+            elif(maxToContainer < row or maxToContainer < pos[0]):
+                craneCost = max(row, pos[0]) - row + max(row, pos[0]) - pos[0] + abs(pos[1] - col)
             else:
-                craneCost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
+                craneCost = maxToContainer - row + maxToContainer - pos[0] + abs(pos[1] - col)
             # now we have the baseline cost to get from wherever the container was before to the container we are trying to move
             maxFromContainer = -1
-            if(index == -1):
+            if(row == -1):
                 continue
             for j in range(12):
-                if j == i:
+                if j == col:
                     maxFromContainer = -1
                     continue
                 if topContainers[j] == 7:
@@ -405,39 +412,42 @@ def loadUnload(grid, toUnload, toLoad):
                 cost = 0
                 k = topContainers[j] # this is the row index of the highest container in column j
                 k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
-                if(maxFromContainer < index or maxFromContainer < k):
-                    cost = max(index, k) - index + max(index, k) - k + abs(j - i) + craneCost
+                if(maxFromContainer < row or maxFromContainer < k):
+                    cost = max(row, k) - row + max(row, k) - k + abs(j - col) + craneCost
                 else:
-                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i) + craneCost
+                    cost = maxFromContainer - row + maxFromContainer - k + abs(j - col) + craneCost
                 if(cost < 0):
                     print("NEGATIVE!!!!!!!")
                     return None
-                newgrid = [row[:] for row in curr_grid]
-                newgrid[k][j] = newgrid[index][i]
-                newgrid[index][i] = 0
+                newgrid = np.copy(curr_grid)
+                newgrid[k][j] = newgrid[row][col]
+                newgrid[row][col] = -1
                 if(craneDocked):
                     cost += 2
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), newgrid, path + [(index, i, k, j)], curr_cost + cost, load, unload, (k, j), False))
+                numOfStates += 1
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), numOfStates, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, load, unload, (k, j), False))
             #unload i as well
             # cost is 2 from ship to truck and whatever the cost inside the ship is(collum + 8 - row)
             if(load):
-                if(topContainers[i] < 7):
-                    newgrid = [row[:] for row in curr_grid]
-                    cost = i + 8 - topContainers[i] + 2
-                    newgrid[topContainers[i] + 1][i] = 96 + toLoad - load #give a unique id
+                if(row < 7):
+                    newgrid = np.copy(curr_grid)
+                    cost = col + 8 - row + 2
+                    newgrid[row + 1][col] = 96 + toLoad - load #give a unique id
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(topContainers[i] + 1, i, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
-            if(curr_grid[topContainers[i]][i] < 96 and unload[curr_grid[topContainers[i]][i]]):
-                newgrid = [row[:] for row in curr_grid]
-                cost = i + 8 - topContainers[i] + 2 + craneCost
-                newgrid[topContainers[i]][i] = 0
+                    numOfStates += 1
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+            if(curr_grid[row][col] < 96 and unload[curr_grid[row][col]]):
+                newgrid = np.copy(curr_grid)
+                cost = col + 8 - row + 2 + craneCost
+                newgrid[row][col] = -1
                 if(craneDocked):
                     cost += 2
                 # remove from unload
-                newUnload = unload.copy()
-                newUnload[curr_grid[topContainers[i]][i]] -= 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
+                newUnload = np.copy(unload)
+                newUnload[curr_grid[row][col]] -= 1
+                numOfStates += 1
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 def getCellIndex(cell_str):
@@ -558,8 +568,11 @@ def upload_mainfest():
             manifest_path = "./manifests/" + manifest.filename
             manifest.save(manifest_path)
 
-            # find a way to pass this back to the FE
-            MANIFEST_NAME = manifest.filename
+            try:
+                f = open("./globals/path.txt", "w")
+                f.write(manifest.filename)
+            except Exception as e:
+                print(f"Failed to write to file: {e}")
 
             # log to the user that the manifest was uplpoaded
             return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
@@ -568,8 +581,10 @@ def upload_mainfest():
             return jsonify({'error': "Upload operation failed"}), 500
     else:
         try:
-            # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase1.txt"
+            f = open("./globals/path.txt", "r")
+            manifest_name = f.read().strip()
+            f.close()
+            manifest_path = "./manifests/" + manifest_name
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
@@ -578,11 +593,24 @@ def upload_mainfest():
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
             print(simpleGrid)
             soln = balance(numericalGrid)
+            with open("./globals/weights.txt", 'w') as file:
+                for weights in soln[1]:
+                    for weight in weights:
+                        file.write(f"{weight}\n")
             steps = generateSteps(soln[2], simpleGrid)
+            last_step = steps[-1]
+            with open("./globals/names.txt", 'w') as file:
+                for line in last_step:
+                    for name in line:
+                        file.write(str(name) + "\n")
             print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
             print(soln[2])
+            #with open("./globals/names.txt", 'w') as file:
+            #    for row in soln[2]:
+            #        for name in row:
+            #            file.write(name + "\n")
             returnItems = [{"steps": steps}, {"moves": soln[2]}]
             return jsonify(returnItems)
         except Exception as e:
@@ -646,14 +674,71 @@ def get_grid_names():
         return jsonify({'error': "Failed to fetch grid names"}), 500
 
 
+@app.route("/downloadManifest", methods=["POST","GET"])
+def download_manifest():
+    try:
+        f = open("./globals/path.txt", "r")
+        manifest_name = f.read().strip()
+        f.close()
+        base_name = os.path.splitext(manifest_name)[0]
+        new_path = "./new_manifests/" + base_name + "_OUTBOUND.txt"
+        weights = []
+        names = []
+        with open("./globals/weights.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    weights.append(clean_line)
+        with open("./globals/names.txt", "r") as file:
+            for line in file:
+                clean_line = line.strip()
+                if clean_line:
+                    names.append(clean_line)
+        with open(new_path, 'w') as file:
+            i, j = 1, 1
+            for weight, name in zip(weights, names):
+                if len(str(j)) == 2:
+                    file.write(f"[0{i},{j}], ")
+                else:
+                    file.write(f"[0{i},0{j}], ")
+                if int(weight) == -1 or int(weight) == -2:
+                    file.write("{0000")
+                else:
+                    range = 5 - len(weight)
+                    file.write("{")
+                    while range > 1:
+                        file.write("0")
+                        range -= 1
+                    file.write(weight)
+                file.write("}, " + name + "\n")
+                if j == 12:
+                    i += 1
+                    j = 1
+                else:
+                    j += 1
+                
+                # keeps printing an extra at 9, so this stops it
+                if i == 9:
+                    break
+        new_name = base_name + "_OUTBOUND.txt"
+        return send_file(
+                new_path,
+                as_attachment=True,
+                download_name=new_name
+            )
+    except Exception as e:
+        server_logger.error("downloadManifest error", error=str(e))
+        return jsonify({'error': "downloadManifest failed"}), 500
+
+
 if __name__ == "__main__":
     print("hello world")
-    unload = np.zeros(96)
-    unload[1] = 1
-    unload[3] = 1
-    # solution = loadUnload(grid2, unload, load)
-    solution = balance(grid)
-    print(hueristicBalance(grid))
+    unload = np.zeros(4)
+    unload[0] = 1
+    unload[2] = 1
+    solution = loadUnload(grid2, unload, load)
+    # solution = balance(grid)
+    # print(hueristicBalance(grid))
     print("goodbye world")
     print(solution[0])
     print(solution[2])

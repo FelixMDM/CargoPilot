@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Containers from "./Containers";
+import Link from "next/link";
 
 interface FormElements extends HTMLFormControlsCollection {
     comments: HTMLInputElement
@@ -17,34 +18,41 @@ const ContainersPanel = ()  => {
 
     const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
     const [moves, setMoves] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
-
-    const [comments, setComments] = useState<string>("");
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const grids: number[][][] = [
-        [
-            [0, 1, 0],
-            [1, 1, 0],
-            [0, 0, 1],
-        ],
-        [
-            [1, 0, 0],
-            [0, 1, 1],
-            [1, 0, 0],
-        ],
-        [
-            [0, 0, 1],
-            [1, 0, 1],
-            [1, 1, 0],
-        ],
-    ];
+    const [comments, setComments] = useState<string>("");
+    const [manifestDownloaded, setManifestDownloaded] = useState(false);
+    
+    const [startCell, setStartCell] = useState("None");
+    const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+
+    const updateGridForMove = (moveIndex: number) => {
+        if (!grid.length || !moves.length || moveIndex < 0 || moveIndex >= moves.length) return;
+
+        const [startX, startY] = moves[moveIndex];
+        setStartCell(grid[moveIndex][startX][startY]);
+    };
 
     const nextGrid = () => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % grids.length);
+        if (currentMoveIndex < moves.length - 1) {
+            updateGridForMove(currentMoveIndex + 1);
+            setCurrentMoveIndex((prev) => prev + 1);
+        }
+    
+        if (currentIndex < grid.length - 1) {
+            setCurrentIndex((prev) => prev + 1);
+        }
     };
 
     const prevGrid = () => {
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + grids.length) % grids.length);
+        if (currentMoveIndex > 0) {
+            updateGridForMove(currentMoveIndex - 1);
+            setCurrentMoveIndex((prev) => prev - 1);
+        }
+    
+        if (currentIndex > 0) {
+            setCurrentIndex((prev) => prev - 1);
+        }
     };
 
     const handleSubmit = (event: React.FormEvent<CommentFormElement>) => {
@@ -53,6 +61,11 @@ const ContainersPanel = ()  => {
         console.log("Submitted Comment:", commentValue);
         setComments("");
     };
+
+    const handleDownload = () => {
+        window.location.href = 'http://localhost:8080/downloadManifest';
+        setManifestDownloaded(true);
+    }
 
     useEffect(() => {
         try {
@@ -65,6 +78,13 @@ const ContainersPanel = ()  => {
                 console.log(data);
                 console.log(data[0]);
                 console.log(data[1]);
+                {
+                    if (grid.length > 0 && moves.length > 0) {
+                        const [startX, startY] = moves[currentMoveIndex];
+                        // console.log("yolo",data[0].steps[currentMoveIndex])
+                        setStartCell(data[0].steps[currentMoveIndex][startX][startY+1]);
+                    }
+                }
             })
 
         } catch (error) {
@@ -83,12 +103,39 @@ const ContainersPanel = ()  => {
                         className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
                         PREV
                     </button>
+                    {currentIndex >= 0 && currentIndex < moves.length && 
+                        <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
+                            Move {startCell} from ({moves[currentMoveIndex][0]}, {moves[currentMoveIndex][1]}) to ({moves[currentMoveIndex][2]}, {moves[currentMoveIndex][3]}).
+                        </p>
+                    }
                 </div> 
-                <Containers grid={grid[currentIndex]} steps={moves[currentIndex]}/>
+                <div className="flex flex-col">
+                    {currentIndex === moves.length && 
+                        <div className="absolute flex flex-col h-[50%] w-[50%] left-[25%] rounded-md opacity-95 bg-slate-500 text-white font-bold text-center justify-center items-center">
+                            <div className="">
+                                Balance finished. Please download and email outbound manifest.  
+                            </div>
+                            <button
+                                onClick={handleDownload}
+                                className="w-[300px] p-4 m-2 bg-green-600 rounded-2xl hover:text-white cursor-pointer"
+                            >
+                                Download Manifest
+                            </button>
+                            {manifestDownloaded && 
+                                <Link
+                                    href="/options"
+                                >
+                                    Back to options
+                                </Link>
+                            }
+                        </div>
+                    }
+                    <Containers grid={grid[currentIndex]} steps={moves[currentIndex]}/>
+                </div>
                 <div className="flex flex-col w-[10%] space-y-[15%] items-center">
                     <button 
                         onClick={nextGrid} 
-                        disabled={currentIndex === grids.length - 1}
+                        disabled={currentIndex === grid.length - 1}
                         className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white">
                         NEXT
                     </button>

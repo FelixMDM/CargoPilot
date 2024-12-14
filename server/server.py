@@ -608,6 +608,19 @@ def submit_load():
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
 
+@app.route("/getGridNames", methods=["GET"])
+def get_grid_names():
+    try:
+        manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+        
+        gridNames = manifestToGrid(containerClassGrid) 
+        return jsonify({'gridNames': gridNames}) #send to front-end
+
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 
 if __name__ == "__main__":
     print("hello world")

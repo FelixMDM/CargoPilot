@@ -50,6 +50,29 @@ def test_invalid_log_payload():
     assert response.status_code == 200  # Accepts incomplete payloads
     assert b"status" in response.data  # Check that it responds with a success message
 
+def test_duplicate_log_messages():
+    client = app.test_client()
+    test_data = {
+        "level": "info",
+        "component": "test",
+        "message": "test message"
+    }
+    response1 = client.post('/log', json=test_data, content_type='application/json')
+    response2 = client.post('/log', json=test_data, content_type='application/json')
+    assert response1.status_code == 200
+    assert response2.status_code == 200
+
+def test_large_log_message():
+    client = app.test_client()
+    large_message = "a" * 10000  # 10,000 characters
+    test_data = {
+        "level": "info",
+        "component": "test",
+        "message": large_message
+    }
+    response = client.post('/log', json=test_data, content_type='application/json')
+    assert response.status_code == 200
+
 def test_missing_file_upload():
     client = app.test_client()
     response = client.post('/uploadManifest', content_type='multipart/form-data')  # No file

@@ -51,6 +51,20 @@ def test_hueristic_balance():
     unbalanced_grid[0][11] = 1000
     assert hueristicBalance(unbalanced_grid) > 0  # Should be unbalanced (right is heavier)
 
+def test_hueristic_balance_alternating_weights():
+    grid = [[0 for _ in range(12)] for _ in range(8)]
+    grid[0][0] = 100
+    grid[0][1] = 50  # Increase weight on the left
+    grid[0][6] = 100
+    grid[0][7] = 1   # Smaller weight on the right
+    assert hueristicBalance(grid) > 0  # Should detect imbalance
+
+def test_hueristic_balance_edge_weights():
+    grid = [[0 for _ in range(12)] for _ in range(8)]
+    grid[0][0] = 1  # Minimum weight
+    grid[0][1] = 10**6  # Maximum weight
+    assert hueristicBalance(grid) > 0  # Should handle extreme weights
+
 def test_balance():
     """Test balance function"""
     # Create a grid with unbalanced but movable containers
@@ -76,6 +90,34 @@ def test_balance():
         ratio = difference / max_weight
         print(f"Left sum: {left_sum}, Right sum: {right_sum}, Ratio: {ratio}")
         assert ratio <= 0.1  # Should be within 10%
+
+def test_empty_grid_balance():
+    """Test balance function with an empty grid"""
+    empty_grid = [[0 for _ in range(12)] for _ in range(8)]
+    result = balance(empty_grid)
+    assert result == (0, empty_grid, [])  # Adjust expected output to match current behavior
+
+def test_single_container_balance():
+    """Test balance function with a single container"""
+    grid = [[0 for _ in range(12)] for _ in range(8)]
+    grid[0][0] = 100
+    result = balance(grid)
+    assert result is not None
+    cost, final_grid, path = result
+    assert cost == 0  # Already balanced
+
+def test_balance_large_grid():
+    large_grid = [[100 for _ in range(24)] for _ in range(16)]  # 16x24 grid
+    result = balance(large_grid)
+    assert result is not None
+
+def test_invalid_grid_structure():
+    malformed_grid = [[100, 0], [0, 0, 100]]  # Rows have different lengths
+    try:
+        result = balance(malformed_grid)
+        assert False, "Expected exception for malformed grid"
+    except Exception as e:
+        assert isinstance(e, ValueError) or isinstance(e, IndexError)
 
 def test_load_unload():
     """Test loadUnload function"""
@@ -113,18 +155,3 @@ def test_can_balance():
     test_grid[1][0] = 200  # Make left side heavier
     result, _, _ = canBalance(test_grid)
     assert result == False
-
-def test_empty_grid_balance():
-    """Test balance function with an empty grid"""
-    empty_grid = [[0 for _ in range(12)] for _ in range(8)]
-    result = balance(empty_grid)
-    assert result == (0, empty_grid, [])  # Adjust expected output to match current behavior
-
-def test_single_container_balance():
-    """Test balance function with a single container"""
-    grid = [[0 for _ in range(12)] for _ in range(8)]
-    grid[0][0] = 100
-    result = balance(grid)
-    assert result is not None
-    cost, final_grid, path = result
-    assert cost == 0  # Already balanced

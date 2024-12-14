@@ -522,6 +522,8 @@ def upload_mainfest():
             # find a way to pass this back to the FE
             MANIFEST_NAME = manifest.filename
 
+            server_logger.info(f"Manifest uploaded successfully: {manifest.filename}")
+
             # log to the user that the manifest was uplpoaded
             return jsonify({'message': "File uploaded. Press 'OK' to proceed"})
         except Exception as e:
@@ -531,7 +533,6 @@ def upload_mainfest():
         try:
             # grab the manifest file that we need to use
             manifest_path = "./manifests/ShipCase1.txt"
-
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
             

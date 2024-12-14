@@ -31,9 +31,9 @@ grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-grid2 = [[-2, 1, 2, 3, -1, -1, -1, -1, -1, -1, -1, -2],
-        [1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        [1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid2 = [[-2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -2],
+        [-1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -310,6 +310,9 @@ def balanceOutput(grid: list[list[Container]], steps):
         newgrid[item[0]][item[1]] = 0
         output += [newgrid]
 
+def customKey(item):
+    return item[0]
+
 def hueristicLoad(grid, toUnload, toLoad):
     # return sum(toUnload.values()) * 4 + toLoad * 2 # This is faster but also a larger underestimate of the cost
     count = np.sum(toUnload)
@@ -342,12 +345,14 @@ def hueristicLoad(grid, toUnload, toLoad):
 def loadUnload(grid, toUnload, toLoad):
     heap = []
     npGrid = np.array(grid)
-    heapq.heappush(heap, (0, npGrid, [], 0, toLoad, toUnload, (8, 0), 1))
+    global numOfStates
+    numOfStates = 0
+    heapq.heappush(heap, (0, numOfStates, npGrid, [], 0, toLoad, toUnload, (8, 0), 1))
     count = 0
     visited = set()
     while(heap):
         count += 1
-        hCost, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
+        hCost, _, curr_grid, path, curr_cost, load, toUnload, pos, craneDocked = heapq.heappop(heap)
         unload = toUnload.copy()
         unloadCopy = tuple(unload)  # For immutability in `visited`
         gridTuple = tuple(map(tuple, curr_grid))  # Immutable grid representation
@@ -356,7 +361,7 @@ def loadUnload(grid, toUnload, toLoad):
         visited.add((gridTuple, unloadCopy))
         gridTuple = tuple(tuple(row) for row in curr_grid)
 
-        if(not load and not any(unload)):
+        if(not load and not np.any(unload)):
             # finished
             return curr_cost, curr_grid, path
         if(count % 100 == 0):
@@ -372,14 +377,17 @@ def loadUnload(grid, toUnload, toLoad):
         for col, row in enumerate(topContainers):
             if row == -1:
                 continue
-            elif curr_grid[row][col] == -2 and load and row < 7:
-                newgrid = np.copy(curr_grid)
-                cost = row + 8 - col + 2
-                newgrid[row + 1][col] = 96 + toLoad - load #give a unique id
-                if(not craneDocked):
-                    cost += 2 + 8 - pos[0] + pos[1]
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+            elif curr_grid[row][col] == -2:
+                if(load and row < 7):
+                    newgrid = np.copy(curr_grid)
+                    cost = 8 - row + col + 2
+                    newgrid[row + 1][col] = 96 + toLoad - load #give a unique id
+                    if(not craneDocked):
+                        cost += 2 + 8 - pos[0] + pos[1]
+                    numOfStates += 1
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
                 continue
+
             # first calculate the cost it will take to get from the cranes current position to this specific container
             craneCost = 0
             if col == pos[1]:
@@ -388,9 +396,9 @@ def loadUnload(grid, toUnload, toLoad):
                 if row == pos[0]:
                     craneCost = 0
             elif(maxToContainer < row or maxToContainer < pos[0]):
-                craneCost = max(row, pos[0]) - row + max(row, pos[0]) - pos[0] + abs(pos[1] - i)
+                craneCost = max(row, pos[0]) - row + max(row, pos[0]) - pos[0] + abs(pos[1] - col)
             else:
-                craneCost = maxToContainer - row + maxToContainer - pos[0] + abs(pos[1] - i)
+                craneCost = maxToContainer - row + maxToContainer - pos[0] + abs(pos[1] - col)
             # now we have the baseline cost to get from wherever the container was before to the container we are trying to move
             maxFromContainer = -1
             if(row == -1):
@@ -415,10 +423,11 @@ def loadUnload(grid, toUnload, toLoad):
                     return None
                 newgrid = np.copy(curr_grid)
                 newgrid[k][j] = newgrid[row][col]
-                newgrid[row][col] = 0
+                newgrid[row][col] = -1
                 if(craneDocked):
                     cost += 2
-                heapq.heappush(heap, (curr_cost + cost + 1, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, load, unload, (k, j), False))
+                numOfStates += 1
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), numOfStates, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, load, unload, (k, j), False))
             #unload i as well
             # cost is 2 from ship to truck and whatever the cost inside the ship is(collum + 8 - row)
             if(load):
@@ -428,17 +437,19 @@ def loadUnload(grid, toUnload, toLoad):
                     newgrid[row + 1][col] = 96 + toLoad - load #give a unique id
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (topContainers[i] + 1, i), False))
+                    numOfStates += 1
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
             if(curr_grid[row][col] < 96 and unload[curr_grid[row][col]]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
-                newgrid[row][col] = 0
+                newgrid[row][col] = -1
                 if(craneDocked):
                     cost += 2
                 # remove from unload
                 newUnload = np.copy(unload)
                 newUnload[curr_grid[row][col]] -= 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
+                numOfStates += 1
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 # begin routes
@@ -555,11 +566,11 @@ def upload_mainfest():
 if __name__ == "__main__":
     print("hello world")
     unload = np.zeros(4)
-    unload[1] = 1
-    unload[3] = 1
+    unload[0] = 1
+    unload[2] = 1
     solution = loadUnload(grid2, unload, load)
-    solution = balance(grid)
-    print(hueristicBalance(grid))
+    # solution = balance(grid)
+    # print(hueristicBalance(grid))
     print("goodbye world")
     print(solution[0])
     print(solution[2])

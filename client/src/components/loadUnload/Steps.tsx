@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import StepsContainers from "../containers/StepsContainers";
+import Containers from "../containers/containersLoadUnload";
 
 const Steps = () => {
   return (
@@ -20,9 +20,8 @@ const Steps = () => {
             PREV
           </button>
         </div>
-
-        {/* Grid */}
-        <StepsContainers />
+        
+        <Containers selectable={false}/>
 
         <div className="flex flex-col w-[10%] space-y-[15%] items-center">
           <button

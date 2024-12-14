@@ -77,7 +77,7 @@ const Unload = ({ nextStepsPage }) => {
       </div>
 
       <div className="flex flex-row mt-[5%] justify-evenly">
-        <Containers />
+        <Containers selectable={true} />
         <div className="flex flex-col w-[10%] space-y-[15%] items-center">
           <button
             onClick={handleUnload}

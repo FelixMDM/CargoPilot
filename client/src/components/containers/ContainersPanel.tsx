@@ -63,6 +63,7 @@ const ContainersPanel = ()  => {
     };
 
     const handleDownload = () => {
+        window.location.href = 'http://localhost:8080/downloadManifest';
         setManifestDownloaded(true);
     }
 
@@ -116,6 +117,7 @@ const ContainersPanel = ()  => {
                             </div>
                             <button
                                 onClick={handleDownload}
+                                className="w-[300px] p-4 m-2 bg-green-600 rounded-2xl hover:text-white cursor-pointer"
                             >
                                 Download Manifest
                             </button>

@@ -85,18 +85,6 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     return nameGrid
 
-def manifestToGridLoad(gridContainerClass: list[list[Container]], iDs):
-    numGrid = [[0 for _ in range(12)] for _ in range(8)]
-    for i in range(8):
-        for j in range(12):
-            if gridContainerClass[i][j].get_name() == "NAN":
-                numGrid[i][j] = -2
-                continue
-            elif gridContainerClass[i][j].get_name() == "UNUSED":
-                numGrid[i][j] = -1
-                continue
-            numGrid[i][j] = iDs[gridContainerClass[i][j].get_name]
-
 def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -570,17 +558,17 @@ def upload_mainfest():
     else:
         try:
             # grab the manifest file that we need to use
-            manifest_path = "./manifests/ShipCase6.txt"
+            manifest_path = "./manifests/ShipCase1.txt"
 
             # pass the actual manifest file that's presumable cached into the balance function
             containerClassGrid = read_manifest.read_manifest(manifest_path)
             
             simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
-            #print(simpleGrid)
+            print(simpleGrid)
             soln = balance(numericalGrid)
             steps = generateSteps(soln[2], simpleGrid)
-            # print(steps) # generated steps by this point for balancing, now we just have to pass it right
+            print(steps) # generated steps by this point for balancing, now we just have to pass it right
             # print(numericalGrid)
             # print(containerClassGrid)
             print(soln[2])
@@ -627,27 +615,31 @@ def submit_load():
         return jsonify({"message": "No number of containers provided"}), 400
 
     numLoad = data["numLoad"]
-        
-    manifestName = ""
-    with open("./globals/path.txt", "r") as file:
-        manifestName = file.readline().strip()
-    containersToUnload = []
-    with open("cellsToUnload.txt", "r") as file:
-        containersToUnload = [line.strip() for line in file]
-    manifest_path = "./manifests/" + manifestName
-    containerClassGrid = read_manifest.read_manifest(manifest_path)
-    iDs = createIDS(containerClassGrid)
-    toUnload = createToUnload(containersToUnload, iDs)
-    ship = manifestToGridLoad(containerClassGrid, iDs)
-    solution = loadUnload(ship, toUnload, numLoad)
-    print(f"Solution of load/unload: {solution}")
-
 
     # Handle the logic for the number of containers
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
 
+@app.route("/downloadManifest", methods=["POST","GET"])
+def download_manifest():
+    try:
+        f = open("./globals/path.txt", "r")
+        manifest_name = f.read().strip()
+        f.close()
+        base_name = os.path.splitext(manifest_name)[0]
+        new_path = "./new_manifests/" + base_name + "_OUTBOUND.txt"
+        with open(new_path, 'w') as file:
+            file.write("hello")
+        new_name = base_name + "_OUTBOUND.txt"
+        return send_file(
+                new_path,
+                as_attachment=True,
+                download_name=new_name
+            )
+    except Exception as e:
+        server_logger.error("downloadManifest error", error=str(e))
+        return jsonify({'error': "downloadManifest failed"}), 500
 
 if __name__ == "__main__":
     print("hello world")

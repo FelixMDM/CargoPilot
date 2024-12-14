@@ -1,0 +1,6 @@
+2024-12-13 21:02:16 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 21:02:22 - ERROR - Upload manifest error - {'error': 'The session is unavailable because no secret key was set.  Set the secret_key on the application to something unique and secret.'}
+2024-12-13 21:03:11 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 21:03:18 - ERROR - Upload manifest error - {'error': 'The session is unavailable because no secret key was set.  Set the secret_key on the application to something unique and secret.'}
+2024-12-13 21:03:38 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 21:03:42 - ERROR - Upload manifest error - {'error': 'The session is unavailable because no secret key was set.  Set the secret_key on the application to something unique and secret.'}

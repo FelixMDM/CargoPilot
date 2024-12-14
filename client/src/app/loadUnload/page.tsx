@@ -1,13 +1,13 @@
-import ContainersPanel from "@/components/containers/ContainersPanel";
-import LoadUnload from "@/components/loadUnload/LoadUnload";
+import React from "react";
+import { SelectedCellsProvider } from "../../components/loadUnload/SelectedCellsContext";
+import Unload from "../../components/loadUnload/Unload";
 
-const page = () => {
-    return (
-        <div>
-            <LoadUnload />
-            <ContainersPanel />
-        </div>
-    );
-}
+const App = () => {
+  return (
+    <SelectedCellsProvider>
+      <Unload />
+    </SelectedCellsProvider>
+  );
+};
 
-export default page;
+export default App;

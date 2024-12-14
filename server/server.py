@@ -441,6 +441,21 @@ def loadUnload(grid, toUnload, toLoad):
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), newgrid, path + [(topContainers[i], i, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
+def cellsToUnloadFile(selected_cells):
+    file_path = "cellsToUnload.txt"
+
+    # Check if the file exists and delete it
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"{file_path} exists and was deleted.")
+
+    # Write to a new file
+    with open(file_path, "w") as file:
+        for cell in selected_cells:
+            file.write(cell + "\n")
+
+    print("Unload clicked and data saved to cellsToUnload.txt")
+
 # begin routes
 app = Flask(__name__)
 CORS(app)
@@ -538,7 +553,6 @@ def upload_mainfest():
             simpleGrid = manifestToGrid(containerClassGrid) # convert to an array of names
             numericalGrid = manifestToNum(containerClassGrid) # convert to an array of weight
             print(simpleGrid)
-
             soln = balance(numericalGrid)
             steps = generateSteps(soln[2], simpleGrid)
             print(steps) # generated steps by this point for balancing, now we just have to pass it right
@@ -551,6 +565,49 @@ def upload_mainfest():
             server_logger.error("Error fetching manifest", error=str(e))
             return jsonify({'error': "Fetch failed for manifest"}), 500
       
+@app.route("/unloadAction", methods=["POST"])
+def unload_action():
+    data = request.get_json()
+
+    if not data or "selectedCells" not in data:
+        return jsonify({"message": "No cells provided"}), 400
+
+    selected_cells = data["selectedCells"]
+
+    # Send confirmation message first
+    confirmation = f"Confirm: Unload {len(selected_cells)} containers"
+    print(confirmation)
+
+    # Return confirmation to the client
+    return jsonify({"message": confirmation}), 200
+
+@app.route("/confirmUnload", methods=["POST"])
+def confirm_unload():
+    data = request.get_json()
+
+    if not data or "selectedCells" not in data:
+        return jsonify({"message": "No cells provided"}), 400
+
+    selected_cells = data["selectedCells"]
+
+    # Proceed to write to the file after confirmation
+    cellsToUnloadFile(selected_cells)
+
+    return jsonify({"message": "Unload action completed and data saved"}), 200
+@app.route("/submitLoad", methods=["POST"])
+def submit_load():
+    data = request.get_json()
+
+    if not data or "numLoad" not in data:
+        return jsonify({"message": "No number of containers provided"}), 400
+
+    numLoad = data["numLoad"]
+
+    # Handle the logic for the number of containers
+    print(f"Number of containers to load: {numLoad}")
+
+    return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
+
 
 if __name__ == "__main__":
     print("hello world")

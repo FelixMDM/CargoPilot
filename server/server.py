@@ -5,6 +5,7 @@ import copy
 import numpy as np
 import re 
 
+from datetime import datetime
 from utils.logger import server_logger
 import os
 from datetime import datetime
@@ -592,6 +593,8 @@ def return_home():
         server_logger.error("LoadUnload error", error=str(e))
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
+# Add global variable to track last request
+last_balance_request = None
 
 @app.route("/uploadManifest", methods = ["POST","GET"])
 def upload_mainfest():
@@ -618,6 +621,17 @@ def upload_mainfest():
             return jsonify({'error': "Upload operation failed"}), 500
     else:
         try:
+            global last_balance_request
+            # Get current timestamp
+            current_request = datetime.now()
+
+            # If there was a recent request (within last 2 seconds), skip processing
+            if last_balance_request and (current_request - last_balance_request).total_seconds() < 2:
+                return jsonify({'message': 'Request too soon after previous request'}), 429
+
+            # Update last request time
+            last_balance_request = current_request
+
             f = open("./globals/path.txt", "r")
             manifest_name = f.read().strip()
             f.close()

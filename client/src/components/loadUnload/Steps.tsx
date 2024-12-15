@@ -4,17 +4,23 @@ import { useState, useEffect } from "react";
 import Containers from "../containers/containersLoadUnload";
 
 type Matrix = string[][]
-type Move = [number, number, number, number]
+type Move = [number, number, number]
 
 const Steps = () => {
   const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [movesFelix, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
+  const [moves, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
   useEffect(() => {
     try {
       fetch("http://localhost:8080/getLUSteps", {
         method: "GET",
     }).then((response) => response.json()).then((data) => {
+      setGrid(data[0].steps);
+      setMovesFelix(data[1].moves);
+
+      // if you need to know what's receieved from this request, look here first
       console.log("haiiiiiiiii");
       console.log(data);
       console.log(data[0]);
@@ -27,7 +33,7 @@ const Steps = () => {
       alert("There was an error retrieving the steps for load/unload");
     }
   }, []);
-  const moves = [
+  const movesX = [
     [
       ["NAN", "Cat", "Dog", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "NAN"],
       ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
@@ -164,7 +170,7 @@ const Steps = () => {
 
         <Containers
           selectable={false}
-          grid={moves}
+          grid={grid}
           currentMove={currentMove}
           highlightedCell={highlightedCell} // Pass the highlighted cell prop
         />

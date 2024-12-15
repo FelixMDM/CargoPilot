@@ -132,21 +132,23 @@ def generateSteps(soln, startGrid):
         steps.append(nextStep)
     return steps
 
-def generateStepsLoadUnload(soln, startGrid):
+def generateStepsLoadUnload(solution, startGrid):
     steps = []
     steps.append(startGrid)
 
-    for i in range(len(soln)):
-        startR, startC = soln[i][0], soln[i][1]
-        endR, endC = soln[i][2], soln[i][3]
-        nextStep = copy.deepcopy(steps[i])
+    # Extract the solution output format (similar to what `balance` function uses)
+    #for move in solution:  # solution should be a list of tuples like [(r1, c1, r2, c2), ...]
+        #startR, startC, endR, endC = move
+        #nextStep = copy.deepcopy(steps[-1])
 
-        tmp = nextStep[endR][endC]
-        nextStep[endR][endC] = nextStep[startR][startC]
-        nextStep[startR][startC] = tmp
+        #tmp = nextStep[endR][endC]
+        #nextStep[endR][endC] = nextStep[startR][startC]
+        #nextStep[startR][startC] = tmp
 
-        steps.append(nextStep)
+        #steps.append(nextStep)
+
     return steps
+
 def hueristicBalance(grid):
     # return 1
     leftSum = 0
@@ -697,9 +699,13 @@ def submit_load():
     iDs = createIDS(containerClassGrid)
     toUnload = createToUnload(containersToUnload, iDs)
     ship = manifestToGridLoad(containerClassGrid, iDs)
+    shipNames = manifestToGrid(containerClassGrid)
     solution = loadUnload(ship, toUnload, numLoad)
-    print(f"Solution of load/unload: {solution}")
+    
+    steps = generateStepsLoadUnload(solution, shipNames)
 
+    print(f"Solution of load/unload: {solution}")
+    print(f"Solution steps: {steps}")
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200

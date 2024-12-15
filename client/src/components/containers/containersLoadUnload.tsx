@@ -31,7 +31,6 @@ const Containers: React.FC<ContainersProps> = ({ selectable }) => {
     fetchGridNames();
   }, []);
 
-  // Handle cell click
   const handleCellClick = (row: number, col: number, index: number) => {
     if (!selectable) return;
 

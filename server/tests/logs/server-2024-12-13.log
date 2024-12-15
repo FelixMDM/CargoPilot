@@ -1,0 +1,51 @@
+2024-12-13 16:41:42 - INFO - test: test message
+2024-12-13 16:41:42 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:41:42 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:44:16 - INFO - test: test message
+2024-12-13 16:44:16 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:44:16 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:52:32 - INFO - test: test message
+2024-12-13 16:52:32 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:52:32 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:52:46 - INFO - test: test message
+2024-12-13 16:52:46 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:52:46 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:53:29 - INFO - test: test message
+2024-12-13 16:53:29 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:53:29 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:54:47 - INFO - test: test message
+2024-12-13 16:54:47 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:54:47 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:55:53 - INFO - test: test message
+2024-12-13 16:55:53 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:55:53 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:56:04 - INFO - test: test message
+2024-12-13 16:56:04 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 16:56:04 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:00:51 - INFO - test: test message
+2024-12-13 17:00:51 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:00:51 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:46:25 - INFO - test: test message
+2024-12-13 17:46:25 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:46:25 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:48:18 - INFO - test: test message
+2024-12-13 17:48:18 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:48:18 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:48:39 - INFO - test: test message
+2024-12-13 17:48:39 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:48:39 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:48:39 - ERROR - Upload manifest error - {'error': '400 Bad Request: The browser (or proxy) sent a request that this server could not understand.'}
+2024-12-13 17:49:05 - INFO - test: test message
+2024-12-13 17:49:05 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:49:05 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:49:21 - INFO - test: test message
+2024-12-13 17:49:21 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:49:21 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:50:32 - INFO - test: test message
+2024-12-13 17:50:32 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:50:32 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:50:32 - INFO - LoadUnload endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:51:14 - INFO - test: test message
+2024-12-13 17:51:14 - INFO - Test endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:51:14 - INFO - Balance endpoint called - {'remote_addr': '127.0.0.1'}
+2024-12-13 17:51:14 - INFO - LoadUnload endpoint called - {'remote_addr': '127.0.0.1'}

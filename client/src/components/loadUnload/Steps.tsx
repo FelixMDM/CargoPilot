@@ -9,7 +9,7 @@ type Move = [number, number, number]
 const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
   const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentLoadIndex, setCurrentLoadIndex] = useState(96);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
   useEffect(() => {
@@ -89,11 +89,21 @@ const Steps = () => {
 
   const handleAskLoadInfoSubmit = () => {
     if (highlightedCell) {
-      const updatedGrid = [...moves];
-      const updatedRow = [...updatedGrid[0][highlightedCell.row]];
-      updatedRow[highlightedCell.col] = containerName; // Use containerName or other relevant data
-      updatedGrid[0][highlightedCell.row] = updatedRow;
+      let updatedGrid = [...moves];
+      // const updatedRow = [...updatedGrid[0][highlightedCell.row]];
+      for(let i = 0; i < updatedGrid.length; i++){
+        for(let j = 0; j < 8; j++){
+          for(let k = 0; k < 12; k++){
+            if(updatedGrid[i][j][k] === currentLoadIndex.toString()){
+              updatedGrid[i][j][k] = containerName;
+            }
+          }
+        }
+      }
+      // updatedRow[highlightedCell.col] = containerName; // Use containerName or other relevant data
+      // updatedGrid[0][highlightedCell.row] = updatedRow;
       setGrid(updatedGrid);
+      setCurrentLoadIndex(currentLoadIndex + 1);
     }
     
     console.log(`Container Name: ${containerName}, Weight: ${containerWeight}`);
@@ -149,7 +159,7 @@ const Steps = () => {
                 type="text"
                 className="w-full border rounded-lg p-2"
                 value={containerName}
-                onChange={(e) => setContainerName(e.target.value)}
+                onChange={(e) => setContainerName(e.target.value)} // e.target.value
               />
             </div>
             <div className="mb-4">

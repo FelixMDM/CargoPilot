@@ -133,6 +133,7 @@ def generateSteps(soln, startGrid):
 def generateLURender(soln, startGrid):
     steps = []
     steps.append(startGrid)
+    count = 96
 
     for i in range(len(soln)):
         action = soln[i][2]
@@ -140,9 +141,10 @@ def generateLURender(soln, startGrid):
 
         nextGrid = copy.deepcopy(steps[i])
         if action == -1:
-            nextGrid[xPos][yPos] = "LOAD"
+            nextGrid[xPos][yPos] = str(count)
+            count += 1
         if action == -2:
-            nextGrid[xPos][yPos] = "UNLOAD"
+            nextGrid[xPos][yPos] = "UNUSED"
         steps.append(nextGrid)
     return steps
 

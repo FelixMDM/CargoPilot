@@ -121,7 +121,6 @@ def test_balance_one_side_populated():
     assert abs(left_sum - right_sum) / max(left_sum, right_sum) <= 0.1
 
 def test_balance_with_nan_spaces():
-    """Test balancing with NAN (-2) spaces in grid"""
     grid = [[-1 for _ in range(12)] for _ in range(8)]
     # adding NAN spaces
     grid[0][0] = -2

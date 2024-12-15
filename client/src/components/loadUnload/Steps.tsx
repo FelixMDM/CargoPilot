@@ -8,7 +8,7 @@ type Move = [number, number, number]
 
 const Steps = () => {
   const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [moves, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
+  const [movesX, setMovesFelix] = useState<Move[]>([[0, 0, 0], [0, 0, 0]]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
@@ -18,7 +18,7 @@ const Steps = () => {
         method: "GET",
     }).then((response) => response.json()).then((data) => {
       setGrid(data[0].steps);
-      setMovesFelix(data[1].moves);
+      setMovesFelix(data[1].movesX);
 
       // if you need to know what's receieved from this request, look here first
       console.log("haiiiiiiiii");
@@ -26,57 +26,17 @@ const Steps = () => {
       console.log(data[0]);
       console.log(data[1]);
       console.log("steps: ", data[0].steps);
-      console.log("moves", data[1].moves);
+      console.log("moves", data[1].movesX);
     });
     } catch (error) {
       console.error("Full error details:", error);
       alert("There was an error retrieving the steps for load/unload");
     }
   }, []);
-  const movesX = [
-    [
-      ["NAN", "Cat", "Dog", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "NAN"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-    ],
-    [
-      ["NAN", "Cat", "Dog", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "NAN"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-    ],
-    [
-      ["NAN", "Cat", "Dog", "UNUSED", "Dog", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "NAN"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-    ],
-    [
-      ["NAN", "Cat", "UNUSED", "UNUSED", "Dog", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "NAN"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-      ["UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"],
-    ],
-  ];
 
-  const path = [[4, 0, -1], [2, 0, -2]]; // Path with cell coordinates and actions
+
+  const moves = grid;
+  const path = movesX; // Path with cell coordinates and actions
 
   const [currentMove, setCurrentMove] = useState(0);
   const [highlightedCell, setHighlightedCell] = useState<{ row: number; col: number; bgColor: string } | undefined>(undefined);
@@ -87,24 +47,29 @@ const Steps = () => {
   const [containerWeight, setContainerWeight] = useState(0);
   
   useEffect(() => {
-    if (currentMove === moves.length - 1) {
-      setHighlightedCell(undefined);
-    } 
-    else if (currentMove > 0) { 
-      const row = path[currentMove - 1]?.[1] ?? 0;
-      const col = path[currentMove - 1]?.[0] ?? 0;
-      const action = path[currentMove - 1]?.[2] || 0;
+    // Only attempt to process path when currentMove is greater than 0 and path exists
+    if (currentMove > 0 && path && path.length > 0) {
+      // use currentMove - 1 to get the correct path index
+      const pathIndex = currentMove - 1;
       
-      const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
-      
-      setHighlightedCell({ row, col, bgColor });
-
-      if (action === -1) {
-        setAskLoadInfo(true); // Show modal if action = -1 (load)
+      if (pathIndex >= 0 && pathIndex < path.length) {
+        const pathEntry = path[pathIndex];
+        const row = pathEntry[1] ?? 0;
+        const col = pathEntry[0] ?? 0;
+        const action = pathEntry[2] ?? 0;
+        
+        const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
+        
+        if (action === -1) {
+          setAskLoadInfo(true);
+        }
+  
+        setHighlightedCell({ row, col, bgColor });
       }
-
+    } else if (currentMove === 0) {
+      setHighlightedCell(undefined);
     }
-  }, [currentMove]);
+  }, [currentMove, path]);
   
   
   const handlePrev = () => {
@@ -112,42 +77,56 @@ const Steps = () => {
       setCurrentMove((prevMove) => prevMove - 1);
       setAskLoadInfo(false);
   
-      if (currentMove - 1 > 0) {
-        const pathIndex = currentMove - 2; // Map step to path index
-        const [row, col, action] = path[pathIndex];
-        const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
-        setHighlightedCell({ row, col, bgColor });
+      if (currentMove > 1) {
+        const pathIndex = currentMove - 2; // Adjust to get the correct path index
+        if (pathIndex >= 0 && pathIndex < path.length) {
+          const curr = path[pathIndex];
+          const [col, row, action] = curr;
+          const bgColor = curr[2] === -1 ? "green" : curr[2] === -2 ? "red" : "";
+          setHighlightedCell({ row, col, bgColor });
+        }
       } else {
         setHighlightedCell(undefined);
       }
     }
   };
   
-  
   const handleNext = () => {
-    if (currentMove < moves.length - 1) {
+    if (currentMove >= 0) {
       setCurrentMove((prevMove) => prevMove + 1);
+      setAskLoadInfo(false);
   
-      if (currentMove + 1 > 0 && currentMove + 1 < moves.length - 1) {
-        const pathIndex = currentMove; // Map step to path index
-        const [row, col, action] = path[pathIndex];
-        const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
-        setHighlightedCell({ row, col, bgColor });
-      } else if (currentMove + 1 === moves.length - 1) {
+      if (currentMove < moves.length - 2) {
+        const pathIndex = currentMove; // Adjust to get the correct path index
+        if (pathIndex >= 0 && pathIndex < path.length) {
+          const curr = path[pathIndex];
+          const [col, row, action] = curr;
+          const bgColor = curr[2] === -1 ? "green" : curr[2] === -2 ? "red" : "";
+          setHighlightedCell({ row, col, bgColor });
+        }
+      } else if (currentMove === moves.length - 2) {
         setHighlightedCell(undefined);
       }
     } else if (currentMove === moves.length - 1) {
       setShowComplete(true);
     }
-    setAskLoadInfo(false);
   };
 
   const handleAskLoadInfoSubmit = () => {
+    if (highlightedCell) {
+      const updatedGrid = [...grid];
+      const updatedRow = [...updatedGrid[0][highlightedCell.row]];
+      updatedRow[highlightedCell.col] = containerName; // Use containerName or other relevant data
+      updatedGrid[0][highlightedCell.row] = updatedRow;
+      setGrid(updatedGrid);
+    }
+    
     console.log(`Container Name: ${containerName}, Weight: ${containerWeight}`);
-    setAskLoadInfo(false); // Close the modal after submission
+    setAskLoadInfo(false); // close the modal after submission
     setContainerName("");
     setContainerWeight(0);
-  }
+  };
+  
   
 
   return (
@@ -186,7 +165,6 @@ const Steps = () => {
           </button>
         </div>
       </div>
-      {/* Modal */}
       
       {askLoadInfo && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">

@@ -499,7 +499,7 @@ def log_message():
 @app.route("/download-logs", methods=['GET'])
 def download_logs():
     try:
-        date_str = datetime.now().strftime("%Y-%m-%d")
+        date_str = datetime.now().strftime("%Y")
         log_file = os.path.join(os.getcwd(), 'logs', f'server-{date_str}.txt')
         
         if os.path.exists(log_file):

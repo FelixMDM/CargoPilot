@@ -13,8 +13,10 @@ const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, 
   const [gridNames, setGridNames] = useState<string[][]>([]);
 
   useEffect(() => {
+    console.log('Current Move:', currentMove);
+    console.log('Current Grid:', grid[currentMove]);
     if (grid && grid[currentMove]) {
-      setGridNames(grid[currentMove]); // update the gridNames based on the current move
+      setGridNames(grid[currentMove]);
     }
   }, [grid, currentMove]);
 
@@ -56,7 +58,6 @@ const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, 
               cellBgColor = "bg-red-500"; // Apply red background color
             }
           } else if (selectable) {
-            // If the cell is selectable and not highlighted, check if it's selected
             cellBgColor = isSelected ? "bg-green-500" : "bg-gray-300";
           }
 

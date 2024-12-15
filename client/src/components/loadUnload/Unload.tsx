@@ -65,7 +65,6 @@ const Unload = ({ nextStepsPage }) => {
         const confirmData = await confirmResponse.json();
         console.log(confirmData.message); // Log the confirm message
 
-        // After unload action, show the popup for number of containers to load
         setAskNumLoad(true);
       } else {
         alert("Unload action canceled.");

@@ -775,34 +775,34 @@ def download_manifest():
         return jsonify({'error': "downloadManifest failed"}), 500
     
 
-def save_state(grid, path, pos, to_load, to_unload):
-    state = {
-        "grid": grid,  # Serialize grid as a list of lists
-        "path": path,  # Steps completed
-        "pos": pos,    # Crane position
-        "to_load": to_load,
-        "to_unload": to_unload,
-    }
+# def save_state(grid, path, pos, to_load, to_unload):
+#     state = {
+#         "grid": grid,  # Serialize grid as a list of lists
+#         "path": path,  # Steps completed
+#         "pos": pos,    # Crane position
+#         "to_load": to_load,
+#         "to_unload": to_unload,
+#     }
 
-    try:
-        with open("./globals/recover.txt", "w") as file:
-            file.write(str(state))
-        return True
-    except Exception as e:
-        server_logger.error(f"Failed to save state: {str(e)}")
-        return False
+#     try:
+#         with open("./globals/recover.txt", "w") as file:
+#             file.write(str(state))
+#         return True
+#     except Exception as e:
+#         server_logger.error(f"Failed to save state: {str(e)}")
+#         return False
     
-def load_state():
-    with open("./globals/recover.txt", "r") as file:
-        state = eval(file.read())
+# def load_state():
+#     with open("./globals/recover.txt", "r") as file:
+#         state = eval(file.read())
 
-    return (
-        state["grid"],
-        state["path"],
-        state["pos"],
-        state["to_load"],
-        state["to_unload"]
-    )
+#     return (
+#         state["grid"],
+#         state["path"],
+#         state["pos"],
+#         state["to_load"],
+#         state["to_unload"]
+#     )
 
 if __name__ == "__main__":
     print("hello world")

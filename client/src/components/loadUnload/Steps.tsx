@@ -10,7 +10,10 @@ const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
   const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
   const [currentLoadIndex, setCurrentLoadIndex] = useState(96);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  // const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  //const [currentIndex, setCurrentIndex] = useState(0);
+  //const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+
 
   useEffect(() => {
     try {

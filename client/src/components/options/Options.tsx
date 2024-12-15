@@ -10,7 +10,6 @@ const Options = () => {
         window.location.href = 'http://localhost:8080/download-logs';
     };
 
-    // Check if the current user is Mr. Keogh (case variations handled)
     const isAdmin = currentUser.toLowerCase() === 'mr. keogh' || 
                    currentUser.toLowerCase() === 'mr.keogh' ||
                    currentUser.toLowerCase() === 'mr keogh';

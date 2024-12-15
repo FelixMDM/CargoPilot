@@ -7,8 +7,8 @@ type Matrix = string[][]
 type Move = [number, number, number]
 
 const Steps = () => {
-  const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [movesX, setMovesFelix] = useState<Move[]>([[Number(0), Number(0), Number(0)], [Number(0), Number(0), Number(0)]]);
+  const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
+  const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
@@ -18,7 +18,7 @@ const Steps = () => {
         method: "GET",
     }).then((response) => response.json()).then((data) => {
       setGrid(data[0].steps);
-      setMovesFelix(data[1].movesX);
+      setMovesFelix(data[1].moves);
 
       // if you need to know what's receieved from this request, look here first
       console.log("haiiiiiiiii");
@@ -26,7 +26,7 @@ const Steps = () => {
       console.log(data[0]);
       console.log(data[1]);
       console.log("steps: ", data[0].steps);
-      console.log("moves", data[1].movesX);
+      console.log("moves", data[1].moves);
     });
     } catch (error) {
       console.error("Full error details:", error);
@@ -35,8 +35,8 @@ const Steps = () => {
   }, []);
 
 
-  const moves = grid;
-  const path = movesX; // Path with cell coordinates and actions
+  //const moves = grid;
+  //const path = movesX; // Path with cell coordinates and actions
 
   const [currentMove, setCurrentMove] = useState(0);
   const [highlightedCell, setHighlightedCell] = useState<{ row: number; col: number; bgColor: string } | undefined>(undefined);
@@ -49,7 +49,8 @@ const Steps = () => {
   useEffect(() => {
     // Only attempt to process path when currentMove is greater than 0 and path exists
     console.log(currentMove);
-    console.log(path);
+    console.log("grid", moves)
+    console.log("path:", path);
     if (currentMove > 0 && path) {
       const currentAction = moves[currentMove][0];
       const row = path[currentMove - 1][1];
@@ -66,7 +67,7 @@ const Steps = () => {
       else if (currentMove === 0) {
         setHighlightedCell(undefined);
     }
-  }, [currentMove]);
+  }, [currentMove, path]);
   
   
   const handlePrev = () => {
@@ -88,7 +89,7 @@ const Steps = () => {
 
   const handleAskLoadInfoSubmit = () => {
     if (highlightedCell) {
-      const updatedGrid = [...grid];
+      const updatedGrid = [...moves];
       const updatedRow = [...updatedGrid[0][highlightedCell.row]];
       updatedRow[highlightedCell.col] = containerName; // Use containerName or other relevant data
       updatedGrid[0][highlightedCell.row] = updatedRow;
@@ -123,7 +124,7 @@ const Steps = () => {
 
         <Containers
           selectable={false}
-          grid={grid}
+          grid={moves}
           currentMove={currentMove}
           highlightedCell={highlightedCell} // Pass the highlighted cell prop
         />

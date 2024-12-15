@@ -93,7 +93,6 @@ def test_balance_single_container():
    assert len(path) == 0
 
 def test_balance_identical_weights():
-    """Test balancing a grid with multiple identical weights"""
     grid = [[0 for _ in range(12)] for _ in range(8)]
     grid[0][0] = 100
     grid[0][1] = 100
@@ -106,19 +105,17 @@ def test_balance_identical_weights():
     assert len(path) == 0
 
 def test_balance_one_side_populated():
-    """Test balancing when containers are concentrated on one side"""
     grid = [[0 for _ in range(12)] for _ in range(8)]
-    # Add containers with balanced total weight but concentrated on left
+    # total weigh its balanced but more containers on left
     grid[0][0] = 150
     grid[1][0] = 100
     grid[0][1] = 75
-    grid[0][6] = 325  # Equal total weight on right but in one spot
+    grid[0][6] = 325
     
     result = balance(grid)
     assert result is not None
     cost, final_grid, path = result
     
-    # Verify some redistribution occurred
     left_sum = sum(final_grid[j][i] for j in range(8) for i in range(6))
     right_sum = sum(final_grid[j][i] for j in range(8) for i in range(6, 12))
     assert abs(left_sum - right_sum) / max(left_sum, right_sum) <= 0.1
@@ -126,54 +123,51 @@ def test_balance_one_side_populated():
 def test_balance_with_nan_spaces():
     """Test balancing with NAN (-2) spaces in grid"""
     grid = [[-1 for _ in range(12)] for _ in range(8)]
-    # Add NAN spaces
+    # adding NAN spaces
     grid[0][0] = -2
     grid[0][11] = -2
-    # Add containers around NAN spaces
+    # add containers around NAN spaces
     grid[0][1] = 100
     grid[0][10] = 100
     
     result = balance(grid)
     assert result is not None
     cost, final_grid, path = result
-    # Verify NAN spaces weren't modified
+    # NAN spaces shouldn't change
     assert final_grid[0][0] == -2
     assert final_grid[0][11] == -2
 
 def test_balance_multiple_stacks():
-    """Test balancing with multiple stacks of containers"""
-    grid = [[0 for _ in range(12)] for _ in range(8)]
-    # Create tall stacks on left side
+    grid = [[0 for i in range(12)] for j in range(8)]
+    # tall stack on the left
     grid[0][0] = 100
     grid[1][0] = 100
-    grid[2][0] = 100  # Total 300 on left
-    # Create different weights on right side
-    grid[0][6] = 200  # Total 200 on right
+    grid[2][0] = 100 
+    grid[0][6] = 200
 
     result = balance(grid)
     assert result is not None, "Balance function returned None unexpectedly"
     cost, final_grid, path = result
     
-    # Validate no movements were made
+    # no movements should be made
     assert len(path) == 0, "Containers were moved despite the grid being unbalanced"
 
-    # Validate final balance state
+    # check the final sum
     left_sum = sum(final_grid[j][i] for j in range(8) for i in range(6))
     right_sum = sum(final_grid[j][i] for j in range(8) for i in range(6, 12))
     assert left_sum == 300 and right_sum == 200, f"Unexpected balance state: Left={left_sum}, Right={right_sum}"
 
 
 def test_perfectly_balanced_grid():
-    """Test balancing a grid that is already perfectly balanced"""
     grid = [[0 for _ in range(12)] for _ in range(8)]
     for i in range(6):
-        grid[0][i] = 100  # Left side
-        grid[0][i + 6] = 100  # Right side
+        grid[0][i] = 100
+        grid[0][i + 6] = 100
     result = balance(grid)
     assert result is not None
     cost, final_grid, path = result
-    assert cost == 0  # No cost for balancing
-    assert len(path) == 0  # No movements needed
+    assert cost == 0
+    assert len(path) == 0  # no movements need
 
 def test_load_unload():
    test_grid = [[-1 for i in range(12)] for j in range(8)]
@@ -191,14 +185,13 @@ def test_load_unload():
    assert len(path) > 0
 
 def test_loading_empty_grid():
-    """Test loading containers into an empty grid"""
-    grid = [[-1 for _ in range(12)] for _ in range(8)]  # Empty grid
-    unload_dict = np.zeros(4, dtype=int)  # Placeholder for valid unload dictionary
-    result = loadUnload(grid, unload_dict, 3)  # Load 3 containers
+    grid = [[-1 for i in range(12)] for j in range(8)]  # empty grid
+    unload_dict = np.zeros(4, dtype=int)
+    result = loadUnload(grid, unload_dict, 3)  # load 3 containers
 
     if result is None:
         print("Debug: loadUnload returned None (no valid loading possible)")
-        assert result is None  # Acceptable behavior for an empty grid with no valid operations
+        assert result is None
     else:
         cost, final_grid, path = result
         assert cost > 0
@@ -215,26 +208,24 @@ def test_unload_nonexistent_container():
    assert result is None
 
 def test_load_unload_complex():
-    """Test complex load/unload scenario with multiple operations"""
-    grid = [[-1 for _ in range(12)] for _ in range(8)]
-    # Set up multiple containers
+    grid = [[-1 for i in range(12)] for j in range(8)]
+
     grid[0][0] = 1
     grid[1][0] = 2
     grid[0][1] = 3
     
-    # Request to unload containers 1 and 3
+    # unload containers 1 and 3
     unload_dict = np.zeros(4, dtype=int)
     unload_dict[1] = 1
     unload_dict[3] = 1
     
-    # Try to load 2 new containers while unloading
+    # load 2 new containers while unloading
     result = loadUnload(grid, unload_dict, 2)
     assert result is not None
     cost, final_grid, path = result
     
-    # Verify correct number of operations
-    assert len(path) >= 4  # At least 4 moves (2 unloads + 2 loads)
-    # Verify container 2 still exists (wasn't marked for unload)
+    # correct number of operations
+    assert len(path) >= 4
     assert any(2 in row for row in final_grid)
 
 def test_can_balance():

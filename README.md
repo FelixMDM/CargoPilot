@@ -1,4 +1,10 @@
-# Project Setup Guide
+# CargoPilot Software
+
+## Overview
+
+Welcome to our senior design project for CS179M (AI) at UCR! This Flask-powered web application is designed to assist dockyard crane operators by providing an intuitive and efficient tool to calculate the optimal unloading and loading and blancing paths for container ships.
+
+## Project Setup Guide
 
 ### To run this project:
 

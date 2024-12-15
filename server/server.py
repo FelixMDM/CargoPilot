@@ -69,12 +69,14 @@ def createIDS(grid: list[list[Container]]):
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
 def createToUnload(toUnload, iDs):
     dict = {}
+    unload = np.zeros(len(iDs))
+    print(f"TEST!!!!: {iDs}")
     for container in toUnload:
         if iDs[container] in dict:
-            dict[iDs[container]] +=1
+            unload[iDs[container]] +=1
         else:
-            dict[iDs[container]] = 1 
-    return dict
+            unload[iDs[container]] = 1 
+    return unload
 
 def manifestToGrid(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a names only representation of this
@@ -86,6 +88,18 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     return nameGrid
 
+def manifestToGridLoad(gridContainerClass: list[list[Container]], iDs):
+    numGrid = np.zeros((8, 12))
+    for i in range(8):
+        for j in range(12):
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numGrid[i][j] = -1
+                continue
+            numGrid[i][j] = iDs[gridContainerClass[i][j].get_name()]
+    return numGrid
 def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -118,6 +132,21 @@ def generateSteps(soln, startGrid):
         steps.append(nextStep)
     return steps
 
+def generateStepsLoadUnload(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        startR, startC = soln[i][0], soln[i][1]
+        endR, endC = soln[i][2], soln[i][3]
+        nextStep = copy.deepcopy(steps[i])
+
+        tmp = nextStep[endR][endC]
+        nextStep[endR][endC] = nextStep[startR][startC]
+        nextStep[startR][startC] = tmp
+
+        steps.append(nextStep)
+    return steps
 def hueristicBalance(grid):
     # return 1
     leftSum = 0
@@ -320,18 +349,18 @@ def hueristicLoad(grid, toUnload, toLoad):
         return 0
     if(not count):
         return 4 * toLoad
-    unload = toUnload.copy()
+    unload = np.copy(toUnload)
     unloadCosts = []
     for i in range(len(grid)):
         for j in range(len(grid[0])):
-            if grid[i][j] < 96 and unload[grid[i][j]]:
+            if grid[i][j] < 96 and grid[i][j] >= 0 and unload[int(grid[i][j])]:
                 unloadCosts += [(8 - i + j + 2, i, j)]
     totalCost = 4 * toLoad
 
     for cost, row, col in unloadCosts:
-        if(grid[row][col] < 96 and unload[grid[row][col]]):
+        if grid[row][col] < 96 and unload[int(grid[row][col])]:
             totalCost += cost
-            unload[grid[row][col]] -= 1
+            unload[int(grid[row][col])] -= 1
             count -= 1
             if(count == 0):
                 return totalCost
@@ -437,7 +466,7 @@ def loadUnload(grid, toUnload, toLoad):
                        cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
                     heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
-            if(curr_grid[row][col] < 96 and unload[curr_grid[row][col]]):
+            if(curr_grid[row][col] < 96 and unload[int(curr_grid[row][col])]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
                 newgrid[row][col] = -1
@@ -445,7 +474,7 @@ def loadUnload(grid, toUnload, toLoad):
                     cost += 2
                 # remove from unload
                 newUnload = np.copy(unload)
-                newUnload[curr_grid[row][col]] -= 1
+                newUnload[int(curr_grid[row][col])] -= 1
                 numOfStates += 1
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
@@ -558,7 +587,7 @@ def return_home():
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
 
-@app.route("/uploadManifest", methods = ["POST", "GET"])
+@app.route("/uploadManifest", methods = ["POST","GET"])
 def upload_mainfest():
     if request.method == "POST":
         try:
@@ -646,16 +675,31 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells)
 
     return jsonify({"message": "Unload action completed and data saved"}), 200
-@app.route("/submitLoad", methods=["POST"])
+@app.route("/submitLoad", methods=["POST", "GET"])
 def submit_load():
+    print("SubmitLoad Called")
     data = request.get_json()
 
     if not data or "numLoad" not in data:
         return jsonify({"message": "No number of containers provided"}), 400
 
     numLoad = data["numLoad"]
+    #numLoad = int(numLoad)
+    manifestName = ""
+    with open("./globals/path.txt", "r") as file:
+        manifestName = file.readline().strip()
+    containersToUnload = []
+    with open("cellsToUnload.txt", "r") as file:
+        containersToUnload = [line.strip() for line in file]
+    
+    manifest_path = "./manifests/" + manifestName
+    containerClassGrid = read_manifest.read_manifest(manifest_path)
+    iDs = createIDS(containerClassGrid)
+    toUnload = createToUnload(containersToUnload, iDs)
+    ship = manifestToGridLoad(containerClassGrid, iDs)
+    solution = loadUnload(ship, toUnload, numLoad)
+    print(f"Solution of load/unload: {solution}")
 
-    # Handle the logic for the number of containers
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
@@ -729,7 +773,36 @@ def download_manifest():
     except Exception as e:
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
+    
 
+def save_state(grid, path, pos, to_load, to_unload):
+    state = {
+        "grid": grid,  # Serialize grid as a list of lists
+        "path": path,  # Steps completed
+        "pos": pos,    # Crane position
+        "to_load": to_load,
+        "to_unload": to_unload,
+    }
+
+    try:
+        with open("./globals/recover.txt", "w") as file:
+            file.write(str(state))
+        return True
+    except Exception as e:
+        server_logger.error(f"Failed to save state: {str(e)}")
+        return False
+    
+def load_state():
+    with open("./globals/recover.txt", "r") as file:
+        state = eval(file.read())
+
+    return (
+        state["grid"],
+        state["path"],
+        state["pos"],
+        state["to_load"],
+        state["to_unload"]
+    )
 
 if __name__ == "__main__":
     print("hello world")

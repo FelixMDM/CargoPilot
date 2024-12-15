@@ -1,9 +1,10 @@
 "use client"
-
+import { useUser } from "@/app/UserContext";
 import { useState } from "react";
 
 const Login = () => {
     const [username, setUsername] = useState('');
+    const { setCurrentUser } = useUser();
 
     const logToServer = async (message: string, level: string) => {
         try {
@@ -29,6 +30,7 @@ const Login = () => {
             await logToServer('Login attempt failed - empty username', 'error');
             alert(`Please provide credentials`);
         } else {
+            setCurrentUser(username);
             await logToServer(`User "${username}" logged in successfully`, 'info');
             alert(`Logged in as: ${username}`);
             alert(`Please select 'Options' to proceed or login again below`); 

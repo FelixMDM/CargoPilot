@@ -222,13 +222,16 @@ def balance(grid):
         # if goal break
         # for each possible move, add it to the queue.
     heap = []
-    heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
+    global numOfStates
+    numOfStates = 0
+    npGrid = np.array(grid)
+    heapq.heappush(heap, (0, numOfStates, npGrid, [], 0, (8, 0)))
     count = 0
     visited = set()
-    canB, leftGoal, rightGoal = canBalance(grid)
+    canB, leftGoal, rightGoal = canBalance(npGrid)
     while(heap):
         count += 1
-        hCost, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
+        hCost, _, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
         gridTuple = tuple(tuple(row) for row in curr_grid)
         if gridTuple in visited:
             continue
@@ -253,53 +256,51 @@ def balance(grid):
         if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
             print(f"Left : {left}, Right : {right} CanBalance: {canB}")
             # balanced
-            return curr_cost, curr_grid, path
+            return curr_cost - len(path), curr_grid, path
         maxToContainer = -1
-        for i in range(12):
-            if topContainers[i] == -1:
+        for col, row in enumerate(topContainers):
+            if row == -1:
                 continue
-            elif curr_grid[topContainers[i]][i] == -2:
+            elif curr_grid[row][col] == -2:
                 continue
-            index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
             craneCost = 0
-            if i == pos[1]:
+            if col == pos[1]:
                 maxToContainer = -1
-                craneCost = pos[0] - index
-                if index == pos[0]:
+                craneCost = pos[0] - row
+                if row == pos[0]:
                     craneCost = 0
-            elif(maxToContainer < index or maxToContainer < pos[0]):
-                craneCost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
+            elif(maxToContainer < row or maxToContainer < pos[0]):
+                craneCost = abs(row - pos[0]) + abs(pos[1] - col) #max(row, pos[0]) - row + max(row, pos[0]) - pos[0] 
             else:
-                craneCost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
+                craneCost = maxToContainer - row + maxToContainer - pos[0] + abs(pos[1] - col)
             cost = 0
-            if topContainers[i] >= maxToContainer:
-                maxToContainer = topContainers[i] + 1
+            if row >= maxToContainer:
+                maxToContainer = row + 1
             maxFromContainer = -1
-            if(index == -1):
-                continue
             for j in range(12):
-                if j == i:
+                if j == col:
                     maxFromContainer = -1
                     continue
                 if topContainers[j] == 7:
                     continue
                 if topContainers[j] >= maxFromContainer:
                     maxFromContainer = topContainers[j] + 1
-                k = topContainers[j] # this is the row index of the highest container in column j
+                k = topContainers[j] # this is the row row of the highest container in column j
                 k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
-                if(maxFromContainer < index or maxFromContainer < k):
-                    cost = max(index, k) - index + max(index, k) - k + abs(j - i) + craneCost
+                if(maxFromContainer < row or maxFromContainer < k):
+                    cost = max(row, k) - row + max(row, k) - k + abs(j - col) + craneCost
                 else:
-                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i) + craneCost
+                    cost = maxFromContainer - row + maxFromContainer - k + abs(j - col) + craneCost
                 if(cost < 0):
                     print("NEGATIVE!!!!!!!")
                     return None
                 # moving container from top of column i, to top of column j
-                newgrid = [row[:] for row in curr_grid]
-                newgrid[k][j] = newgrid[index][i]
-                newgrid[index][i] = -1
-                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
+                newgrid = np.copy(curr_grid)
+                newgrid[k][j] = newgrid[row][col]
+                newgrid[row][col] = -1
+                numOfStates += 1
+                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid) + 1, numOfStates, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, (k, j)))
     return None
 
 def balanceOutput(grid: list[list[Container]], steps):
@@ -733,10 +734,10 @@ def download_manifest():
 
 if __name__ == "__main__":
     print("hello world")
-    unload = np.zeros(4)
-    unload[0] = 1
-    unload[2] = 1
-    solution = loadUnload(grid2, unload, load)
+    unload = np.zeros(52)
+    unload[1] = 1
+    unload[3] = 1
+    solution = loadUnload(grid, unload, load)
     # solution = balance(grid)
     # print(hueristicBalance(grid))
     print("goodbye world")
@@ -744,5 +745,5 @@ if __name__ == "__main__":
     print(solution[2])
     print(solution[1])
 
-    app.run(debug=True, port=8080)
+    # app.run(debug=True, port=8080)
 

@@ -1,54 +1,40 @@
-"use client";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelectedCells } from "../loadUnload/SelectedCellsContext";
 
 interface ContainersProps {
-  selectable?: boolean; }
+  selectable?: boolean;
+  grid: string[][][]; // Array of grids for each move
+  currentMove: number; // Index of the current move
+  highlightedCell?: { row: number; col: number; bgColor: string }; // prop for highlighted cell
+}
 
-const Containers: React.FC<ContainersProps> = ({ selectable }) => {
-  //const { selectedCells, setSelectedCells } = useSelectedCells();
-  const { selectedCellsId, setSelectedCellsId } = useSelectedCells(); // cell IDs to handle same name selections
-  const [gridNames, setGridNames] = useState<string[][]>([]); //store container names 
-  const [loading, setLoading] = useState<boolean>(true); 
+const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell }) => {
+  const { selectedCellsId, setSelectedCellsId } = useSelectedCells();
+  const [gridNames, setGridNames] = useState<string[][]>([]);
 
-  useEffect(() => { //get grid names from server endpoint
-    const fetchGridNames = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/getGridNames");
-        const data = await response.json();
+  useEffect(() => {
+    console.log('Current Move:', currentMove);
+    console.log('Current Grid:', grid[currentMove]);
+    if (grid && grid[currentMove]) {
+      setGridNames(grid[currentMove]);
+    }
+  }, [grid, currentMove]);
 
-        console.log("Server Response:", data);
-        if (data.gridNames) {
-          setGridNames(data.gridNames);
-        }
-      } catch (error) {
-        console.error("Error fetching grid names:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGridNames();
-  }, []);
-
-  // Handle cell click
   const handleCellClick = (row: number, col: number, index: number) => {
     if (!selectable) return;
 
-    const cellId = `${index}, (${row}, ${col})`; 
-    const cellTitle = gridNames[row]?.[col] || "Loading..."; 
+    const cellId = `${index}, (${row}, ${col})`;
 
     setSelectedCellsId((prevSelectedIds) => {
       const newSelectedIds = new Set(prevSelectedIds);
       if (prevSelectedIds.has(cellId)) {
         newSelectedIds.delete(cellId);
-      }
-      else {
-        newSelectedIds.add(cellId); // select the cell in the ID set
+      } else {
+        newSelectedIds.add(cellId);
       }
       return newSelectedIds;
     });
-  }
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -58,28 +44,35 @@ const Containers: React.FC<ContainersProps> = ({ selectable }) => {
           const row = 7 - Math.floor(index / 12);
 
           const cellId = `${index}, (${row}, ${col})`;
-          const cellTitle = gridNames[row]?.[col] || "Loading..."; // Use grid title if available
-          const isSelected = selectedCellsId.has(cellId); // Check selection by ID
+          const cellTitle = gridNames[row]?.[col] || "UNUSED";
+          const isSelected = selectedCellsId.has(cellId);
 
-          const cellBgColor = selectable
-            ? isSelected
-              ? "bg-green-500" // Selected cells are green
-              : "bg-gray-300" // Non-selected cells are gray
-            : "bg-gray-300"; // Default for non-selectable
+          // Determine background color for the cell
+          let cellBgColor = "bg-gray-300"; // Default background color
+
+          // Check if the current cell is the highlighted one and apply the bgColor (green or red)
+          if (highlightedCell && highlightedCell.row === row && highlightedCell.col === col) {
+            if (highlightedCell.bgColor === "green") {
+              cellBgColor = "bg-green-500"; // Apply green background color
+            } else if (highlightedCell.bgColor === "red") {
+              cellBgColor = "bg-red-500"; // Apply red background color
+            }
+          } else if (selectable) {
+            cellBgColor = isSelected ? "bg-green-500" : "bg-gray-300";
+          }
 
           return (
             <button
               key={index}
               className={`cell m-auto p-2 border border-black ${cellBgColor}`}
               onClick={() => handleCellClick(row, col, index)}
-              disabled={!selectable} // Disable for non-selectable
+              disabled={!selectable}
             >
-              {cellTitle} {/* Display the grid name */}
+              {cellTitle}
             </button>
           );
         })}
       </div>
-      {loading && <p>Loading grid names...</p>} {/* Show loading message */}
     </div>
   );
 };

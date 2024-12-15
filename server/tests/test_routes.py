@@ -6,7 +6,6 @@ import json
 from server import app
 
 def test_log_endpoint():
-    """Test the log endpoint"""
     client = app.test_client()
     test_data = {
         "level": "info",
@@ -19,35 +18,31 @@ def test_log_endpoint():
     assert response.status_code == 200
 
 def test_test_endpoint():
-    """Test the test endpoint"""
     client = app.test_client()
     response = client.get('/test')
     assert response.status_code == 200
     assert b'message' in response.data
 
 def test_balance_endpoint():
-    """Test the balance endpoint"""
     client = app.test_client()
     response = client.get('/balance')
     assert response.status_code == 200
 
 def test_loadUnload_endpoint():
-    """Test the balance endpoint"""
     client = app.test_client()
     response = client.get('/loadUnload')
     assert response.status_code == 200
 
 def test_download_logs_endpoint():
-    """Test the balance endpoint"""
     client = app.test_client()
     response = client.get('/download-logs')
     assert response.status_code == 200
 
 def test_invalid_log_payload():
     client = app.test_client()
-    response = client.post('/log', json={}, content_type='application/json')  # Missing fields
+    response = client.post('/log', json={}, content_type='application/json')
     assert response.status_code == 200
-    assert b"status" in response.data  # Check that it responds with a success message
+    assert b"status" in response.data  # should show a success message
 
 def test_duplicate_log_messages():
     client = app.test_client()
@@ -63,7 +58,7 @@ def test_duplicate_log_messages():
 
 def test_large_log_message():
     client = app.test_client()
-    large_message = "a" * 10000  # 10,000 characters
+    large_message = "a" * 10000  # testing 10,000 characters
     test_data = {
         "level": "info",
         "component": "test",

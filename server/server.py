@@ -69,12 +69,14 @@ def createIDS(grid: list[list[Container]]):
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
 def createToUnload(toUnload, iDs):
     dict = {}
+    unload = np.zeros(len(iDs))
+    print(f"TEST!!!!: {iDs}")
     for container in toUnload:
         if iDs[container] in dict:
-            dict[iDs[container]] +=1
+            unload[iDs[container]] +=1
         else:
-            dict[iDs[container]] = 1 
-    return dict
+            unload[iDs[container]] = 1 
+    return unload
 
 def manifestToGrid(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a names only representation of this
@@ -86,6 +88,18 @@ def manifestToGrid(gridContainerClass: list[list[Container]]):
 
     return nameGrid
 
+def manifestToGridLoad(gridContainerClass: list[list[Container]], iDs):
+    numGrid = np.zeros((8, 12))
+    for i in range(8):
+        for j in range(12):
+            if gridContainerClass[i][j].get_name() == "NAN":
+                numGrid[i][j] = -2
+                continue
+            elif gridContainerClass[i][j].get_name() == "UNUSED":
+                numGrid[i][j] = -1
+                continue
+            numGrid[i][j] = iDs[gridContainerClass[i][j].get_name()]
+    return numGrid
 def manifestToNum(gridContainerClass: list[list[Container]]):
     # take the container class from the read manfiest function, generate a numbers only representation of this
     numGrid = [[0 for _ in range(12)] for _ in range(8)]
@@ -118,6 +132,21 @@ def generateSteps(soln, startGrid):
         steps.append(nextStep)
     return steps
 
+def generateStepsLoadUnload(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        startR, startC = soln[i][0], soln[i][1]
+        endR, endC = soln[i][2], soln[i][3]
+        nextStep = copy.deepcopy(steps[i])
+
+        tmp = nextStep[endR][endC]
+        nextStep[endR][endC] = nextStep[startR][startC]
+        nextStep[startR][startC] = tmp
+
+        steps.append(nextStep)
+    return steps
 def hueristicBalance(grid):
     # return 1
     leftSum = 0
@@ -222,16 +251,13 @@ def balance(grid):
         # if goal break
         # for each possible move, add it to the queue.
     heap = []
-    global numOfStates
-    numOfStates = 0
-    npGrid = np.array(grid)
-    heapq.heappush(heap, (0, numOfStates, npGrid, [], 0, (8, 0)))
+    heapq.heappush(heap, (0, grid, [], 0, (8, 0)))
     count = 0
     visited = set()
-    canB, leftGoal, rightGoal = canBalance(npGrid)
+    canB, leftGoal, rightGoal = canBalance(grid)
     while(heap):
         count += 1
-        hCost, _, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
+        hCost, curr_grid, path, curr_cost, pos = heapq.heappop(heap)
         gridTuple = tuple(tuple(row) for row in curr_grid)
         if gridTuple in visited:
             continue
@@ -256,51 +282,53 @@ def balance(grid):
         if((left != 0 and right != 0 and abs(left - right) / left < 0.1) or (not canB and ((left <= leftGoal and right >= rightGoal)))):
             print(f"Left : {left}, Right : {right} CanBalance: {canB}")
             # balanced
-            return curr_cost - len(path), curr_grid, path
+            return curr_cost, curr_grid, path
         maxToContainer = -1
-        for col, row in enumerate(topContainers):
-            if row == -1:
+        for i in range(12):
+            if topContainers[i] == -1:
                 continue
-            elif curr_grid[row][col] == -2:
+            elif curr_grid[topContainers[i]][i] == -2:
                 continue
+            index = topContainers[i] # this is the row index of the highest container in column i
             # first calculate the cost it will take to get from the cranes current position to this specific container
             craneCost = 0
-            if col == pos[1]:
+            if i == pos[1]:
                 maxToContainer = -1
-                craneCost = pos[0] - row
-                if row == pos[0]:
+                craneCost = pos[0] - index
+                if index == pos[0]:
                     craneCost = 0
-            elif(maxToContainer < row or maxToContainer < pos[0]):
-                craneCost = abs(row - pos[0]) + abs(pos[1] - col) #max(row, pos[0]) - row + max(row, pos[0]) - pos[0] 
+            elif(maxToContainer < index or maxToContainer < pos[0]):
+                craneCost = max(index, pos[0]) - index + max(index, pos[0]) - pos[0] + abs(pos[1] - i)
             else:
-                craneCost = maxToContainer - row + maxToContainer - pos[0] + abs(pos[1] - col)
+                craneCost = maxToContainer - index + maxToContainer - pos[0] + abs(pos[1] - i)
             cost = 0
-            if row >= maxToContainer:
-                maxToContainer = row + 1
+            if topContainers[i] >= maxToContainer:
+                maxToContainer = topContainers[i] + 1
             maxFromContainer = -1
+            if(index == -1):
+                continue
             for j in range(12):
-                if j == col:
+                if j == i:
                     maxFromContainer = -1
                     continue
                 if topContainers[j] == 7:
                     continue
                 if topContainers[j] >= maxFromContainer:
                     maxFromContainer = topContainers[j] + 1
-                k = topContainers[j] # this is the row row of the highest container in column j
+                k = topContainers[j] # this is the row index of the highest container in column j
                 k = k + 1 #0 add 1 to k beacause we need to place the container ontop of the container at kj
-                if(maxFromContainer < row or maxFromContainer < k):
-                    cost = max(row, k) - row + max(row, k) - k + abs(j - col) + craneCost
+                if(maxFromContainer < index or maxFromContainer < k):
+                    cost = max(index, k) - index + max(index, k) - k + abs(j - i) + craneCost
                 else:
-                    cost = maxFromContainer - row + maxFromContainer - k + abs(j - col) + craneCost
+                    cost = maxFromContainer - index + maxFromContainer - k + abs(j - i) + craneCost
                 if(cost < 0):
                     print("NEGATIVE!!!!!!!")
                     return None
                 # moving container from top of column i, to top of column j
-                newgrid = np.copy(curr_grid)
-                newgrid[k][j] = newgrid[row][col]
-                newgrid[row][col] = -1
-                numOfStates += 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid) + 1, numOfStates, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, (k, j)))
+                newgrid = [row[:] for row in curr_grid]
+                newgrid[k][j] = newgrid[index][i]
+                newgrid[index][i] = -1
+                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
     return None
 
 def balanceOutput(grid: list[list[Container]], steps):
@@ -321,18 +349,18 @@ def hueristicLoad(grid, toUnload, toLoad):
         return 0
     if(not count):
         return 4 * toLoad
-    unload = toUnload.copy()
+    unload = np.copy(toUnload)
     unloadCosts = []
     for i in range(len(grid)):
         for j in range(len(grid[0])):
-            if grid[i][j] < 96 and unload[grid[i][j]]:
+            if grid[i][j] < 96 and grid[i][j] >= 0 and unload[int(grid[i][j])]:
                 unloadCosts += [(8 - i + j + 2, i, j)]
     totalCost = 4 * toLoad
 
     for cost, row, col in unloadCosts:
-        if(grid[row][col] < 96 and unload[grid[row][col]]):
+        if grid[row][col] < 96 and unload[int(grid[row][col])]:
             totalCost += cost
-            unload[grid[row][col]] -= 1
+            unload[int(grid[row][col])] -= 1
             count -= 1
             if(count == 0):
                 return totalCost
@@ -438,7 +466,7 @@ def loadUnload(grid, toUnload, toLoad):
                        cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
                     heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
-            if(curr_grid[row][col] < 96 and unload[curr_grid[row][col]]):
+            if(curr_grid[row][col] < 96 and unload[int(curr_grid[row][col])]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
                 newgrid[row][col] = -1
@@ -446,7 +474,7 @@ def loadUnload(grid, toUnload, toLoad):
                     cost += 2
                 # remove from unload
                 newUnload = np.copy(unload)
-                newUnload[curr_grid[row][col]] -= 1
+                newUnload[int(curr_grid[row][col])] -= 1
                 numOfStates += 1
                 heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
@@ -559,7 +587,7 @@ def return_home():
         return jsonify({'error': "Load/Unload operation failed"}), 500
 
 
-@app.route("/uploadManifest", methods = ["POST", "GET"])
+@app.route("/uploadManifest", methods = ["POST","GET"])
 def upload_mainfest():
     if request.method == "POST":
         try:
@@ -647,16 +675,31 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells)
 
     return jsonify({"message": "Unload action completed and data saved"}), 200
-@app.route("/submitLoad", methods=["POST"])
+@app.route("/submitLoad", methods=["POST", "GET"])
 def submit_load():
+    print("SubmitLoad Called")
     data = request.get_json()
 
     if not data or "numLoad" not in data:
         return jsonify({"message": "No number of containers provided"}), 400
 
     numLoad = data["numLoad"]
+    #numLoad = int(numLoad)
+    manifestName = ""
+    with open("./globals/path.txt", "r") as file:
+        manifestName = file.readline().strip()
+    containersToUnload = []
+    with open("cellsToUnload.txt", "r") as file:
+        containersToUnload = [line.strip() for line in file]
+    
+    manifest_path = "./manifests/" + manifestName
+    containerClassGrid = read_manifest.read_manifest(manifest_path)
+    iDs = createIDS(containerClassGrid)
+    toUnload = createToUnload(containersToUnload, iDs)
+    ship = manifestToGridLoad(containerClassGrid, iDs)
+    solution = loadUnload(ship, toUnload, numLoad)
+    print(f"Solution of load/unload: {solution}")
 
-    # Handle the logic for the number of containers
     print(f"Number of containers to load: {numLoad}")
 
     return jsonify({"message": f"Successfully received {numLoad} containers"}), 200
@@ -734,10 +777,10 @@ def download_manifest():
 
 if __name__ == "__main__":
     print("hello world")
-    unload = np.zeros(52)
-    unload[1] = 1
-    unload[3] = 1
-    solution = loadUnload(grid, unload, load)
+    unload = np.zeros(4)
+    unload[0] = 1
+    unload[2] = 1
+    solution = loadUnload(grid2, unload, load)
     # solution = balance(grid)
     # print(hueristicBalance(grid))
     print("goodbye world")
@@ -745,5 +788,5 @@ if __name__ == "__main__":
     print(solution[2])
     print(solution[1])
 
-    # app.run(debug=True, port=8080)
+    app.run(debug=True, port=8080)
 

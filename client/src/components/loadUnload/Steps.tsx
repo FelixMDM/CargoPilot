@@ -8,7 +8,7 @@ type Move = [number, number, number]
 
 const Steps = () => {
   const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [movesX, setMovesFelix] = useState<Move[]>([[0, 0, 0], [0, 0, 0]]);
+  const [movesX, setMovesFelix] = useState<Move[]>([[Number(0), Number(0), Number(0)], [Number(0), Number(0), Number(0)]]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
@@ -40,77 +40,51 @@ const Steps = () => {
 
   const [currentMove, setCurrentMove] = useState(0);
   const [highlightedCell, setHighlightedCell] = useState<{ row: number; col: number; bgColor: string } | undefined>(undefined);
+  
   const [showComplete, setShowComplete] = useState(false);
-
   const [askLoadInfo, setAskLoadInfo] = useState(false);
   const [containerName, setContainerName] = useState("");
   const [containerWeight, setContainerWeight] = useState(0);
   
   useEffect(() => {
     // Only attempt to process path when currentMove is greater than 0 and path exists
-    if (currentMove > 0 && path && path.length > 0) {
-      // use currentMove - 1 to get the correct path index
-      const pathIndex = currentMove - 1;
-      
-      if (pathIndex >= 0 && pathIndex < path.length) {
-        const pathEntry = path[pathIndex];
-        const row = pathEntry[1] ?? 0;
-        const col = pathEntry[0] ?? 0;
-        const action = pathEntry[2] ?? 0;
-        
-        const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
-        
-        if (action === -1) {
-          setAskLoadInfo(true);
-        }
-  
-        setHighlightedCell({ row, col, bgColor });
+    console.log(currentMove);
+    console.log(path);
+    if (currentMove > 0 && path) {
+      const currentAction = moves[currentMove][0];
+      const row = path[currentMove - 1][1];
+      const col = path[currentMove - 1][0];
+      const action = path[currentMove - 1][2]; // use the action from the path array
+
+      const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
+      if (action === -1) {
+        setAskLoadInfo(true);
       }
-    } else if (currentMove === 0) {
-      setHighlightedCell(undefined);
+  
+      setHighlightedCell({ row, col, bgColor });
+      }
+      else if (currentMove === 0) {
+        setHighlightedCell(undefined);
     }
-  }, [currentMove, path]);
+  }, [currentMove]);
   
   
   const handlePrev = () => {
     if (currentMove > 0) {
       setCurrentMove((prevMove) => prevMove - 1);
       setAskLoadInfo(false);
-  
-      if (currentMove > 1) {
-        const pathIndex = currentMove - 2; // Adjust to get the correct path index
-        if (pathIndex >= 0 && pathIndex < path.length) {
-          const curr = path[pathIndex];
-          const [col, row, action] = curr;
-          const bgColor = curr[2] === -1 ? "green" : curr[2] === -2 ? "red" : "";
-          setHighlightedCell({ row, col, bgColor });
-        }
-      } else {
-        setHighlightedCell(undefined);
-      }
     }
   };
   
   const handleNext = () => {
-    if (currentMove >= 0) {
+    if (currentMove < moves.length - 1) {
       setCurrentMove((prevMove) => prevMove + 1);
       setAskLoadInfo(false);
-  
-      if (currentMove < moves.length - 2) {
-        const pathIndex = currentMove; // Adjust to get the correct path index
-        if (pathIndex >= 0 && pathIndex < path.length) {
-          const curr = path[pathIndex];
-          const [col, row, action] = curr;
-          const bgColor = curr[2] === -1 ? "green" : curr[2] === -2 ? "red" : "";
-          setHighlightedCell({ row, col, bgColor });
-        }
-      } else if (currentMove === moves.length - 2) {
-        setHighlightedCell(undefined);
-      }
     } else if (currentMove === moves.length - 1) {
       setShowComplete(true);
     }
   };
+  
 
   const handleAskLoadInfoSubmit = () => {
     if (highlightedCell) {

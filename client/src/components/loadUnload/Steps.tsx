@@ -53,8 +53,8 @@ const Steps = () => {
     console.log("path:", path);
     if (currentMove > 0 && path) {
       const currentAction = moves[currentMove][0];
-      const row = path[currentMove - 1][1];
-      const col = path[currentMove - 1][0];
+      const row = path[currentMove - 1][0];
+      const col = path[currentMove - 1][1];
       const action = path[currentMove - 1][2]; // use the action from the path array
 
       const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
@@ -102,8 +102,6 @@ const Steps = () => {
     setContainerWeight(0);
   };
   
-  
-
   return (
     <div className="flex flex-col items-center">
       <div className="w-full bg-blue-100 text-blue-900 text-center py-4 font-bold text-xl">

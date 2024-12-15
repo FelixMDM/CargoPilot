@@ -26,6 +26,25 @@ const ContainersPanel = ()  => {
     const [startCell, setStartCell] = useState("None");
     const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
+    const logToServer = async (message: string, level: string) => {
+        try {
+            await fetch('http://localhost:8080/log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message,
+                    level,
+                    component: 'ContainersPanel',
+                    timestamp: new Date().toISOString()
+                })
+            });
+        } catch (error) {
+            console.error('Failed to send log to server:', error);
+        }
+    };
+
     const updateGridForMove = (moveIndex: number) => {
         if (!grid.length || !moves.length || moveIndex < 0 || moveIndex >= moves.length) return;
 
@@ -55,10 +74,10 @@ const ContainersPanel = ()  => {
         }
     };
 
-    const handleSubmit = (event: React.FormEvent<CommentFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<CommentFormElement>) => {
         event.preventDefault();
         const commentValue = event.currentTarget.elements.comments.value;
-        console.log("Submitted Comment:", commentValue);
+        await logToServer(`User submitted comment: "${commentValue}"`, 'info');
         setComments("");
     };
 

@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import { useSelectedCells } from "../loadUnload/SelectedCellsContext";
 
@@ -6,9 +5,10 @@ interface ContainersProps {
   selectable?: boolean;
   grid: string[][][]; // Array of grids for each move
   currentMove: number; // Index of the current move
+  highlightedCell?: { row: number; col: number; bgColor: string }; // prop for highlighted cell
 }
 
-const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove }) => {
+const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell }) => {
   const { selectedCellsId, setSelectedCellsId } = useSelectedCells();
   const [gridNames, setGridNames] = useState<string[][]>([]);
 
@@ -42,14 +42,23 @@ const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove }
           const row = 7 - Math.floor(index / 12);
 
           const cellId = `${index}, (${row}, ${col})`;
-          const cellTitle = gridNames[row]?.[col] || "Loading...";
+          const cellTitle = gridNames[row]?.[col] || "UNUSED";
           const isSelected = selectedCellsId.has(cellId);
 
-          const cellBgColor = selectable
-            ? isSelected
-              ? "bg-green-500"
-              : "bg-gray-300"
-            : "bg-gray-300";
+          // Determine background color for the cell
+          let cellBgColor = "bg-gray-300"; // Default background color
+
+          // Check if the current cell is the highlighted one and apply the bgColor (green or red)
+          if (highlightedCell && highlightedCell.row === row && highlightedCell.col === col) {
+            if (highlightedCell.bgColor === "green") {
+              cellBgColor = "bg-green-500"; // Apply green background color
+            } else if (highlightedCell.bgColor === "red") {
+              cellBgColor = "bg-red-500"; // Apply red background color
+            }
+          } else if (selectable) {
+            // If the cell is selectable and not highlighted, check if it's selected
+            cellBgColor = isSelected ? "bg-green-500" : "bg-gray-300";
+          }
 
           return (
             <button

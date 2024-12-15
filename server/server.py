@@ -61,6 +61,7 @@ def createIDS(grid: list[list[Container]]):
                 continue
             else:
                 dict[col.get_name()] = count
+                print("the count for some reason:", count)
                 count += 1
     return dict
 
@@ -68,14 +69,11 @@ def createIDS(grid: list[list[Container]]):
 # it will output a new dictionary that is how many of each container to remove based on it's ID
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
 def createToUnload(toUnload, iDs):
-    dict = {}
     unload = np.zeros(len(iDs))
-    print(f"TEST!!!!: {iDs}")
     for container in toUnload:
-        if iDs[container] in dict:
-            unload[iDs[container]] +=1
-        else:
-            unload[iDs[container]] = 1 
+        if iDs[container]:
+            unload[iDs[container]] += 1
+    print("jugg messiah:", (unload[0]), type(unload[0]))
     return unload
 
 def manifestToGrid(gridContainerClass: list[list[Container]]):
@@ -130,6 +128,22 @@ def generateSteps(soln, startGrid):
         nextStep[startR][startC] = tmp
 
         steps.append(nextStep)
+    return steps
+
+def generateLURender(soln, startGrid):
+    steps = []
+    steps.append(startGrid)
+
+    for i in range(len(soln)):
+        action = soln[i][2]
+        xPos, yPos = soln[i][0], soln[i][1]
+
+        nextGrid = copy.deepcopy(steps[i])
+        if action == -1:
+            nextGrid[xPos][yPos] = "LOAD"
+        if action == -2:
+            nextGrid[xPos][yPos] = "UNLOAD"
+        steps.append(nextGrid)
     return steps
 
 def generateStepsLoadUnload(solution, startGrid):
@@ -501,7 +515,7 @@ def getCellTitle(index):
     except IndexError:
         return "Unknown" 
     
-def cellsToUnloadFile(selected_cells):
+def cellsToUnloadFile(selected_cells, loadSize):
     file_path = "cellsToUnload.txt"
 
     # check if the file exists and delete it to write a new one
@@ -512,6 +526,7 @@ def cellsToUnloadFile(selected_cells):
     # write to a new file with cell titles instead of cell indexes
     with open(file_path, "w") as file:
         print("file open")
+        file.write(f"{loadSize}\n")
         for cell in selected_cells:
             print("in loop")
             print(cell)
@@ -664,21 +679,92 @@ def unload_action():
     # Return confirmation to the client
     return jsonify({"message": confirmation}), 200
 
+
+#IM WORKING HERE
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#   
+
 @app.route("/confirmUnload", methods=["POST"])
 def confirm_unload():
+    sizeOfMyLoad = request.args.get('loadSize')
+    print(sizeOfMyLoad)
     data = request.get_json()
 
     if not data or "selectedCells" not in data:
         return jsonify({"message": "No cells provided"}), 400
 
     selected_cells = data["selectedCells"]
-
-    # Proceed to write to the file after confirmation
-    cellsToUnloadFile(selected_cells)
-
+    print(selected_cells)
+    cellsToUnloadFile(selected_cells, sizeOfMyLoad)
     return jsonify({"message": "Unload action completed and data saved"}), 200
+
+@app.route("/getLUSteps", methods=["GET"])
+def generateLUSteps():
+    try:
+        """
+            - get our manifest per usual and create out necessary grids, and supporting information necessary to complete a load/unload duoperation
+            - pass that into load unload
+            - process the return values to extract the steps
+            - format to return to the frontend so that navya can read this
+            - THAT BEING SAID:
+                - WRITE FUNCTION TO PROCESS STEPS INTO RENDER-READY MATERIAL
+                - FORMAT RESPONSE
+                - TWEAK FRONTEND TO PICK UP WHAT IM PUTTING DOWN
+        """
+        # create access
+        manifestName = ""
+        with open("./globals/path.txt", "r") as file:
+            manifestName = file.readline().strip()
+        containersToUnload = []
+        with open("cellsToUnload.txt", "r") as file:
+            loadSize = int(file.readline())
+            containersToUnload = [line.strip() for line in file]
+
+        manifest_path = "./manifests/" + manifestName
+
+        # printing the manifest that we're currently using
+        print("manifest curr:", manifest_path)
+
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+
+        # generate necessary data
+        iDs = createIDS(containerClassGrid)
+        toUnload = createToUnload(containersToUnload, iDs)
+        ship = manifestToGridLoad(containerClassGrid, iDs)
+        shipNames = manifestToGrid(containerClassGrid)
+        solution = loadUnload(ship, toUnload, loadSize)
+
+        # debugging shit - felix
+        print("manifes to grid load?:", ship)
+        print("shipnames is:", shipNames)
+        print("solution is:", solution)
+
+        # here im basically using the last item in the load unload return array to maniuplate the cargo array to represent the steps
+        # it may need to be tweaked based on what andrew was saying about there being moves within the ship unfortunately but we will see
+        moves = solution[2]
+        steps = generateLURender(moves, shipNames)
+
+        print("moves", moves)
+        print("steps", steps)
+
+        returnItems = [{"steps": steps}, {"moves": moves}]
+
+        return jsonify(returnItems)
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 @app.route("/submitLoad", methods=["POST", "GET"])
-def submit_load():
+def submit_load():  
     print("SubmitLoad Called")
     data = request.get_json()
 

@@ -7,7 +7,13 @@ const Unload = ({ nextStepsPage }) => {
   const [unload, setUnload] = useState(false);
   const [numLoad, setNumLoad] = useState<number>(0); // For the number of containers
   const [askNumLoad, setAskNumLoad] = useState(false); // To control visibility of popup
-  const { selectedCellsId } = useSelectedCells(); // Use selectedCellsId directly
+  const { selectedCellsId } = useSelectedCells(); // Use selectedCellsId directly 
+
+  const continueProcess = () => {
+      alert("Containers submitted successfully!");
+      nextStepsPage();
+      setAskNumLoad(false); // Close the popup after submission
+  }
 
   const handleUnload = async () => {
     setUnload(true);
@@ -15,7 +21,7 @@ const Unload = ({ nextStepsPage }) => {
     const selectedCellsArray = Array.from(selectedCellsId); // Convert Set to array for the API
 
     try {
-      const response = await fetch("http://localhost:8080/unloadAction", {
+      const response = await fetch(`http://localhost:8080/confirmUnload?loadSize=${numLoad}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,7 +35,7 @@ const Unload = ({ nextStepsPage }) => {
 
       if (isConfirmed) {
         // Send a second request to actually unload the data (write to the file)
-        const confirmResponse = await fetch("http://localhost:8080/confirmUnload", {
+        const confirmResponse = await fetch(`http://localhost:8080/confirmUnload?loadSize=${numLoad}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -50,25 +56,25 @@ const Unload = ({ nextStepsPage }) => {
     }
   };
 
-  const handleSubmitContainers = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/submitLoad", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ numLoad }),
-      });
+  // const handleSubmitContainers = async () => {
+  //   try {
+  //     const response = await fetch("http://localhost:8080/submitLoad", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ numLoad }),
+  //     });
 
-      const data = await response.json();
-      console.log(data.message);
-      alert("Containers submitted successfully!");
-      nextStepsPage();
-      setAskNumLoad(false); // Close the popup after submission
-    } catch (error) {
-      console.error("Error submitting number of containers:", error);
-    }
-  };
+  //     const data = await response.json();
+  //     console.log(data.message);
+  //     alert("Containers submitted successfully!");
+  //     nextStepsPage();
+  //     setAskNumLoad(false); // Close the popup after submission
+  //   } catch (error) {
+  //     console.error("Error submitting number of containers:", error);
+  //   }
+  // };
 
   return (
     <div className="flex flex-col items-center">
@@ -103,16 +109,16 @@ const Unload = ({ nextStepsPage }) => {
             />
             <div className="flex justify-end space-x-4">
               <button
-                onClick={handleSubmitContainers}
+                onClick={handleUnload}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md"
               >
-                Submit
+                Submit Containers
               </button>
               <button
-                onClick={() => setAskNumLoad(false)}
+                onClick={continueProcess}
                 className="bg-gray-300 px-4 py-2 rounded-md"
               >
-                Cancel
+                Continue
               </button>
             </div>
           </div>

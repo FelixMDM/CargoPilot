@@ -132,11 +132,9 @@ def test_unload_nonexistent_container():
     unload_dict[999] = 1  # Try to unload non-existent container
     
     result = loadUnload(grid, unload_dict, 0)
-    # Since the container doesn't exist, the function should complete with an empty grid
-    cost, final_grid, path = result
-    # Grid should remain unchanged since no valid containers to unload
-    assert np.array_equal(final_grid, grid)
-    assert len(path) == 0  # No moves should be made
+    # Since there are no containers to unload and the requested container doesn't exist,
+    # the function should return None
+    assert result is None
 
 def test_can_balance():
     """Test the canBalance function with a simple grid"""

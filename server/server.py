@@ -420,6 +420,10 @@ def loadUnload(grid, toUnload, toLoad):
             # finished
             container_count = sum(1 for row in curr_grid for cell in row if cell >= 0)
             server_logger.info(f"Load/Unload operation completed. Final container count: {container_count}")
+            with open("./globals/weights.txt", 'w') as file:
+                for line in curr_grid:
+                    for weight in line:
+                        file.write(f"{int(weight)}\n")
             return curr_cost, curr_grid, path
         if(count % 100 == 0):
             print(hCost)
@@ -823,6 +827,11 @@ def generateLUSteps():
         print("OOOOOOOOOOOOOOOO")
         steps = generateLURender(moves, shipNames)
 
+        with open("./globals/names.txt", 'w') as file:
+            for line in steps[-1]:
+                for name in line:
+                    file.write(str(name) + "\n")
+
         print("moves", moves)
         print("steps", steps)
 
@@ -943,6 +952,9 @@ def download_manifest():
 def save_loaded_cells_info():
     try:
         loaded_cells_info = request.json
+
+        adjust_files(loaded_cells_info)
+        
         if not loaded_cells_info:
             return jsonify({"error": "No data received"}), 400
         
@@ -955,6 +967,45 @@ def save_loaded_cells_info():
     except Exception as e:
         print(f"Error saving loaded cells info: {str(e)}")
         return jsonify({"error": "Failed to save loaded cells info"}), 500
+
+def adjust_files(loaded_cells_info):
+    names = []
+    weights = []
+
+    with open("./globals/names.txt", "r") as file:
+        for line in file:
+            names.append(line.strip())
+
+    with open("./globals/weights.txt", "r") as file:
+        for line in file:
+            weights.append(line.strip())
+
+    i = 1
+    for cell in loaded_cells_info:
+        if i == 1: # skipping first case
+            i -= 1
+            continue
+
+        posX = cell['posX'] # don't need
+        posY = cell['posY'] # don't need
+        label = cell['label']
+        weight = cell['weight']
+
+        index = posX * 12 + posY
+
+        # if the index is invalid
+        if 0 <= index < len(names):
+            # update name and weight
+            names[index] = label
+            weights[index] = str(weight)
+
+    with open("./globals/names.txt", "w") as file:
+        for name in names:
+            file.write(str(name) + "\n")
+
+    with open("./globals/weights.txt", "w") as file:
+        for weight in weights:
+            file.write(str(weight) + "\n")
     
 # def save_state(grid, path, pos, to_load, to_unload):
 #     state = {

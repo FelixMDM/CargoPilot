@@ -4,6 +4,7 @@ import heapq
 import copy
 import numpy as np
 import re 
+import json
 
 from datetime import datetime
 from utils.logger import server_logger
@@ -888,6 +889,48 @@ def download_manifest():
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
     
+@app.route("/saveStepState", methods=["POST"])
+def save_step():
+    try:
+        data = request.get_json()
+        with open("./globals/step_state.json", "w") as file:
+            json.dump({
+                "currentStep": data.get("currentIndex"),
+                "grid": data.get("grid"),
+                "moves": data.get("moves")
+            }, file)
+        return jsonify({"success": True})
+    except Exception as e:
+        server_logger.error(f"Error saving step state: {str(e)}")
+        return jsonify({"error": "Failed to save step state"}), 500
+
+@app.route("/loadStepState", methods=["GET"])
+def load_step():
+    try:
+        try:
+            with open("./globals/step_state.json", "r") as file:
+                state = json.load(file)
+                return jsonify({
+                    "exists": True,
+                    "currentStep": state["currentStep"],
+                    "grid": state["grid"],
+                    "moves": state["moves"]
+                })
+        except FileNotFoundError:
+            return jsonify({"exists": False})
+    except Exception as e:
+        server_logger.error(f"Error loading step state: {str(e)}")
+        return jsonify({"error": "Failed to load step state"}), 500
+
+@app.route("/clearStepState", methods=["POST"])
+def clear_step():
+    try:
+        if os.path.exists("./globals/step_state.json"):
+            os.remove("./globals/step_state.json")
+        return jsonify({"success": True})
+    except Exception as e:
+        server_logger.error(f"Error clearing step state: {str(e)}")
+        return jsonify({"error": "Failed to clear step state"}), 500
 
 # def save_state(grid, path, pos, to_load, to_unload):
 #     state = {

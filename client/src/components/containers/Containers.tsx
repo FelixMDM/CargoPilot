@@ -27,9 +27,13 @@ const Containers = ({ grid, steps }: ContainerProps)  => {
 
                         if (steps) {
                             const [startX, startY, endX, endY] = steps;
-                            if (rowIndex === startX && colIndex === startY) {
+                            // Adjust row indices to match reversed grid
+                            const adjustedStartX = renderGrid.length - 1 - startX;
+                            const adjustedEndX = renderGrid.length - 1 - endX;
+
+                            if (rowIndex === adjustedStartX && colIndex === startY) {
                                 cellClass += " bg-red-500";
-                            } else if (rowIndex === endX && colIndex === endY) {
+                            } else if (rowIndex === adjustedEndX && colIndex === endY) {
                                 cellClass += " bg-green-500";
                             }
                         }
@@ -37,8 +41,6 @@ const Containers = ({ grid, steps }: ContainerProps)  => {
                         if (name === "NAN") {
                             cellClass += " bg-black text-white";
                         }
-
-                        // cellClass += "border-black"
 
                         return (
                             <div

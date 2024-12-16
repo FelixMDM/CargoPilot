@@ -91,21 +91,14 @@ const ContainersPanel = ()  => {
             fetch("http://localhost:8080/uploadManifest", {
                 method: "GET",
             }).then((response) => response.json()).then((data) => {
-                setGrid(data[0].steps);
+                setGrid(data[0].steps.map(step => step.slice().reverse()));
                 setMoves(data[1].moves);
-                console.log("haiiiiiiiii");
-                console.log(data);
-                console.log(data[0]);
-                console.log(data[1]);
-                {
-                    if (grid.length > 0 && moves.length > 0) {
-                        const [startX, startY] = moves[currentMoveIndex];
-                        // console.log("yolo",data[0].steps[currentMoveIndex])
-                        setStartCell(data[0].steps[currentMoveIndex][startX][startY+1]);
-                    }
+    
+                if (grid.length > 0 && moves.length > 0) {
+                    const [startX, startY] = moves[currentMoveIndex];
+                    setStartCell(data[0].steps[currentMoveIndex][startX][startY+1]);
                 }
             })
-
         } catch (error) {
             console.error("Full error details:", error);
             alert("There was an error getting manifest.");

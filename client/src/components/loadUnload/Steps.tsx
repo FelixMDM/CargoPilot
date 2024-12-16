@@ -213,8 +213,8 @@ const Steps = () => {
 
   let [xPos, yPos, dxPos, dyPos] = [0, 0, 0, 0]
 
-  if (currentMove < moves.length - 1) {
-    let [xPos, yPos, dxPos, dyPos] = path[currentMove + 1]
+  if (currentMove < moves.length - 1 && currentMove > 0) {
+    [xPos, yPos, dxPos, dyPos] = path[currentMove - 1]
   }
   
   return (
@@ -242,12 +242,12 @@ const Steps = () => {
                 )}
                 {dxPos === -2 && (
                   <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                    Unload container at ({xPos}, {yPos}, {moves[currentMove][xPos][yPos]})
+                    Unload container at ({xPos}, {yPos})
                   </p>
                 )}
                 {dxPos >= 0 && (
                   <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                    Move starting cell from ({xPos}, {yPos}) to ({dxPos}, {dyPos}).
+                    Move {moves[currentMove][dxPos][dyPos]} from ({xPos}, {yPos}) to ({dxPos}, {dyPos}).
                   </p>
                 )}
             </>

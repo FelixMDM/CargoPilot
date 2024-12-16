@@ -413,6 +413,11 @@ def loadUnload(grid, toUnload, toLoad):
             # finished
             container_count = sum(1 for row in curr_grid for cell in row if cell >= 0)
             server_logger.info(f"Load/Unload operation completed. Final container count: {container_count}")
+            # Write weights to file
+            with open("./globals/weights.txt", 'w') as file:
+                for row in curr_grid:
+                    for weight in row:
+                        file.write(f"{int(weight)}\n")
             return curr_cost, curr_grid, path
         if(count % 100 == 0):
             print(hCost)
@@ -774,6 +779,11 @@ def generateLUSteps():
         # it may need to be tweaked based on what andrew was saying about there being moves within the ship unfortunately but we will see
         moves = solution[2]
         steps = generateLURender(moves, shipNames)
+        
+        with open("./globals/names.txt", 'w') as file:
+                for row in steps[-1]:
+                    for name in row:
+                        file.write(str(name) + "\n")
 
         print("moves", moves)
         print("steps", steps)

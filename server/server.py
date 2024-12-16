@@ -447,7 +447,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                         cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0, cost)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
                 continue
 
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -489,7 +489,7 @@ def loadUnload(grid, toUnload, toLoad):
                 if(craneDocked):
                     cost += 2
                 numOfStates += 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), numOfStates, newgrid, path + [(row, col, k, j)], curr_cost + cost + 1, load, unload, (k, j), False))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load), numOfStates, newgrid, path + [(row, col, k, j, cost)], curr_cost + cost + 1, load, unload, (k, j), False))
             #unload i as well
             # cost is 2 from ship to truck and whatever the cost inside the ship is(collum + 8 - row)
             if(load):
@@ -500,7 +500,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0, cost)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
             if(curr_grid[row][col] < 96 and unload[int(curr_grid[row][col])]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
@@ -511,7 +511,7 @@ def loadUnload(grid, toUnload, toLoad):
                 newUnload = np.copy(unload)
                 newUnload[int(curr_grid[row][col])] -= 1
                 numOfStates += 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2, 0)], curr_cost + cost, load, newUnload, (8, 0), True))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2, 0, cost)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 def getCellIndex(cell_str):
@@ -806,37 +806,23 @@ def generateLUSteps():
         containerClassGrid = read_manifest.read_manifest(manifest_path)
 
         # generate necessary data
-        print("OOOOOOOOOOOOOOOO")
         iDs = createIDS(containerClassGrid)
-        print("AAAAAAAAAAA")
         toUnload = createToUnload(containersToUnload, iDs)
-        print("EEEEEEEEEEEEEEE")
         ship = manifestToGridLoad(containerClassGrid, iDs)
-        print("IIIIIIIIIIII")
         shipNames = manifestToGrid(containerClassGrid)
-        print("SHHHHHHHHHH")
         solution = loadUnload(ship, toUnload, loadSize)
 
-        # debugging shit - felix
-        print("manifes to grid load?:", ship)
-        print("shipnames is:", shipNames)
-        print("solution is:", solution)
 
         # here im basically using the last item in the load unload return array to maniuplate the cargo array to represent the steps
         # it may need to be tweaked based on what andrew was saying about there being moves within the ship unfortunately but we will see
         moves = solution[2]
-        print("OOOOOOOOOOOOOOOO")
         steps = generateLURender(moves, shipNames)
 
         with open("./globals/names.txt", 'w') as file:
             for line in steps[-1]:
                 for name in line:
                     file.write(str(name) + "\n")
-
-        print("moves", moves)
-        print("steps", steps)
-
-        returnItems = [{"steps": steps}, {"moves": moves}]
+        returnItems = [{"steps": steps}, {"moves": moves}, {"cost": solution[0]}]
 
         return jsonify(returnItems)
     except Exception as e:

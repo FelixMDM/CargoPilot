@@ -17,8 +17,9 @@ interface CommentFormElement extends HTMLFormElement {
 
 const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
+  const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(5).fill(0)));
   const [currentLoadIndex, setCurrentLoadIndex] = useState(96);
+  const [cost, setCost] = useState(0);
   const [loadedCellsInfo, setLoadedCellsInfo] = useState<Array<{ posX: number; posY: number; weight: number; label: string }>>([
     { posX: 0, posY: 0, weight: 0, label: "test" },
   ]);
@@ -35,6 +36,7 @@ const Steps = () => {
     }).then((response) => response.json()).then((data) => {
       setGrid(data[0].steps);
       setMovesFelix(data[1].moves);
+      setCost(data[2].cost)
 
       // if you need to know what's receieved from this request, look here first
       console.log("haiiiiiiiii");
@@ -80,6 +82,7 @@ const Steps = () => {
       const action = path[currentMove - 1][2]; // use the action from the path array
       const row2 = path[currentMove - 1][2]
       const col2 = path[currentMove - 1][3]
+      setCost(cost - path[currentMove - 1][4]);
 
       if(action > -1){
         setHighlightedCell({ row: row, col: col, bgColor: "red" });
@@ -220,7 +223,7 @@ const Steps = () => {
   return (
     <div className="flex flex-col items-center">
       <div className="w-full bg-blue-100 text-blue-900 text-center py-4 font-bold text-xl">
-        STEPS: {currentMove}/{moves.length - 1}
+        Estimated Cost: {cost} STEPS: {currentMove}/{moves.length - 1}
       </div>
 
       <div className="flex flex-row mt-[5%] justify-evenly">
@@ -237,17 +240,17 @@ const Steps = () => {
             <>
               {dxPos === -1 && (
                   <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                    Load container {moves[currentMove][xPos][yPos]} to ({xPos}, {yPos})
+                    Load container {moves[currentMove][xPos][yPos]} to ({xPos}, {yPos}), Cost: {path[currentMove][4]}
                   </p>
                 )}
                 {dxPos === -2 && (
                   <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                    Unload container at ({xPos}, {yPos})
+                    Unload container at ({xPos}, {yPos}), Cost: {path[currentMove][4]}
                   </p>
                 )}
                 {dxPos >= 0 && (
                   <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                    Move {moves[currentMove][dxPos][dyPos]} from ({xPos}, {yPos}) to ({dxPos}, {dyPos}).
+                    Move {moves[currentMove][dxPos][dyPos]} from ({xPos}, {yPos}) to ({dxPos}, {dyPos}), Cost: {path[currentMove][4]}
                   </p>
                 )}
             </>

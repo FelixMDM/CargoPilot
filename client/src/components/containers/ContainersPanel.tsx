@@ -82,35 +82,78 @@ const ContainersPanel = ()  => {
     };
 
     const handleDownload = () => {
-        window.location.href = 'http://localhost:8080/downloadManifest';
-        setManifestDownloaded(true);
+        // Clear save state before downloading
+        fetch('http://localhost:8080/clearStepState', {
+            method: 'POST'
+        }).then(() => {
+            window.location.href = 'http://localhost:8080/downloadManifest';
+            setManifestDownloaded(true);
+        });
     }
+
+    // Save state when steps change
+    useEffect(() => {
+        if (grid.length > 1 && moves.length > 0) {
+            fetch('http://localhost:8080/saveStepState', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    currentIndex,
+                    grid,
+                    moves
+                })
+            }).catch(error => console.error('Failed to save state:', error));
+        }
+    }, [currentIndex, grid, moves]);
 
     useEffect(() => {
         try {
-            fetch("http://localhost:8080/uploadManifest", {
-                method: "GET",
-            }).then((response) => response.json()).then((data) => {
-                setGrid(data[0].steps);
-                setMoves(data[1].moves);
-                console.log("haiiiiiiiii");
-                console.log(data);
-                console.log(data[0]);
-                console.log(data[1]);
-                {
-                    if (grid.length > 0 && moves.length > 0) {
-                        const [startX, startY] = moves[currentMoveIndex];
-                        // console.log("yolo",data[0].steps[currentMoveIndex])
-                        setStartCell(data[0].steps[currentMoveIndex][startX][startY+1]);
+            fetch('http://localhost:8080/loadStepState')
+                .then((response) => response.json())
+                .then((stateData) => {
+                    if (stateData.exists && stateData.grid.length > 1) {
+                        setGrid(stateData.grid);
+                        setMoves(stateData.moves);
+                        setCurrentIndex(stateData.currentStep);
+                        setCurrentMoveIndex(stateData.currentStep);
+                        const [startX, startY] = stateData.moves[stateData.currentStep];
+                        setStartCell(stateData.grid[stateData.currentStep][startX][startY+1]);
+                    } else {
+                        fetch("http://localhost:8080/uploadManifest", {
+                            method: "GET",
+                        }).then((response) => response.json()).then((data) => {
+                            setGrid(data[0].steps);
+                            setMoves(data[1].moves);
+                            console.log("haiiiiiiiii");
+                            console.log(data);
+                            console.log(data[0]);
+                            console.log(data[1]);
+                            {
+                                if (grid.length > 0 && moves.length > 0) {
+                                    const [startX, startY] = moves[currentMoveIndex];
+                                    // console.log("yolo",data[0].steps[currentMoveIndex])
+                                    setStartCell(data[0].steps[currentMoveIndex][startX][startY+1]);
+                                }
+                            }
+                        })
                     }
-                }
-            })
-
+                })
         } catch (error) {
             console.error("Full error details:", error);
             alert("There was an error getting manifest.");
         }
     }, []);
+
+    // Clear state when reaching end of steps
+    useEffect(() => {
+        if (currentIndex === moves.length) {
+            fetch('http://localhost:8080/clearStepState', { 
+                method: 'POST' 
+            });
+        }
+    }, [currentIndex, moves.length]);
 
     return (
         <div className="flex flex-col items-center">

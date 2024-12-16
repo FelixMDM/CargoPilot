@@ -32,8 +32,8 @@ grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-grid2 = [[-2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -2],
-        [-1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid2 = [[-2, 1, 2, -2, -1, -1, -1, -1, -1, -1, -1, -2],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -134,6 +134,7 @@ def generateSteps(soln, startGrid):
 def generateLURender(soln, startGrid):
     steps = []
     steps.append(startGrid)
+    count = 96
 
     for i in range(len(soln)):
         action = soln[i][2]
@@ -141,9 +142,10 @@ def generateLURender(soln, startGrid):
 
         nextGrid = copy.deepcopy(steps[i])
         if action == -1:
-            nextGrid[xPos][yPos] = "LOAD"
+            nextGrid[xPos][yPos] = str(count)
+            count += 1
         if action == -2:
-            nextGrid[xPos][yPos] = "UNLOAD"
+            nextGrid[xPos][yPos] = "UNUSED"
         steps.append(nextGrid)
     return steps
 
@@ -729,6 +731,28 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells, sizeOfMyLoad)
     return jsonify({"message": "Unload action completed and data saved"}), 200
 
+@app.route("/getLoadGrid", methods=["GET"])
+def getLUGrid():
+    try:
+        manifestName = ""
+        with open("./globals/path.txt", "r") as file:
+            manifestName = file.readline().strip()
+        manifest_path = "./manifests/" + manifestName
+
+        # printing the manifest that we're currently using
+        print("manifest curr:", manifest_path)
+
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+
+        # generate necessary data
+        shipNames = manifestToGrid(containerClassGrid)
+        returnItems = [{"steps": [shipNames]}]
+
+        return jsonify(returnItems)
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 @app.route("/getLUSteps", methods=["GET"])
 def generateLUSteps():
     try:
@@ -742,6 +766,16 @@ def generateLUSteps():
                 - FORMAT RESPONSE
                 - TWEAK FRONTEND TO PICK UP WHAT IM PUTTING DOWN
         """
+        
+        # global last_load_request
+        # # Get current timestamp
+        # current_request = datetime.now()
+
+        # # If there was a recent request (within last 2 seconds), skip processing
+        # if last_load_request and (current_request - last_load_request).total_seconds() < 2:
+        #     return jsonify({'message': 'Request too soon after previous request'}), 429
+        
+        # last_load_request = current_request
         # create access
         manifestName = ""
         with open("./globals/path.txt", "r") as file:
@@ -888,7 +922,23 @@ def download_manifest():
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
     
-
+@app.route('/saveLoadedCellsInfo', methods=['POST'])
+def save_loaded_cells_info():
+    try:
+        loaded_cells_info = request.json
+        if not loaded_cells_info:
+            return jsonify({"error": "No data received"}), 400
+        
+        print("Received Loaded Cells Info:")
+        for cell in loaded_cells_info:
+            print(f"Container: {cell['label']}, Position: ({cell['posX']}, {cell['posY']}), Weight: {cell['weight']}")
+        
+        return jsonify({"message": "Loaded cells info saved successfully"}), 200
+    
+    except Exception as e:
+        print(f"Error saving loaded cells info: {str(e)}")
+        return jsonify({"error": "Failed to save loaded cells info"}), 500
+    
 # def save_state(grid, path, pos, to_load, to_unload):
 #     state = {
 #         "grid": grid,  # Serialize grid as a list of lists
@@ -919,17 +969,17 @@ def download_manifest():
 #    )
 
 if __name__ == "__main__":
-    print("hello world")
-    unload = np.zeros(4)
-    unload[0] = 1
-    unload[2] = 1
-    solution = loadUnload(grid2, unload, load)
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
+    # print("hello world")
+    # unload = np.zeros(4)
+    # unload[1] = 1
+    # unload[2] = 1
+    # solution = loadUnload(grid2, unload, 6)
+    # # solution = balance(grid)
+    # # print(hueristicBalance(grid))
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
 
     app.run(debug=True, port=8080)
 

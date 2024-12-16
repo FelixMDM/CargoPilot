@@ -6,9 +6,10 @@ interface ContainersProps {
   grid: string[][][]; // Array of grids for each move
   currentMove: number; // Index of the current move
   highlightedCell?: { row: number; col: number; bgColor: string }; // prop for highlighted cell
+  cellTitleOverride?: { row: number; col: number; title: string };
 }
 
-const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell }) => {
+const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell, cellTitleOverride }) => {
   const { selectedCellsId, setSelectedCellsId } = useSelectedCells();
   const [gridNames, setGridNames] = useState<string[][]>([]);
 
@@ -44,7 +45,15 @@ const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, 
           const row = 7 - Math.floor(index / 12);
 
           const cellId = `${index}, (${row}, ${col})`;
-          const cellTitle = gridNames[row]?.[col] || "UNUSED";
+          let cellTitle = gridNames[row]?.[col] || "UNUSED";
+          if (
+            cellTitleOverride &&
+            cellTitleOverride.row === row &&
+            cellTitleOverride.col === col
+          ) {
+            cellTitle = cellTitleOverride.title; // Override the title
+          }
+
           const isSelected = selectedCellsId.has(cellId);
 
           // Determine background color for the cell

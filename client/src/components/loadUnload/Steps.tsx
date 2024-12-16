@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import Containers from "../containers/containersLoadUnload";
 
@@ -50,6 +51,8 @@ const Steps = () => {
   
   const [showComplete, setShowComplete] = useState(false);
   const [askLoadInfo, setAskLoadInfo] = useState(false);
+  const [showDownload, setShowDownload] = useState(false);
+  const [manifestDownloaded, setManifestDownloaded] = useState(false);
   const [containerName, setContainerName] = useState("");
   const [containerWeight, setContainerWeight] = useState(0);
   
@@ -144,6 +147,7 @@ const Steps = () => {
         console.log("Loaded cells info saved successfully:", data);
         // Optionally reset the state or show a success message
         setShowComplete(false);
+        setShowDownload(true);
       })
       .catch((error) => {
         console.error("Error saving loaded cells info:", error);
@@ -155,6 +159,11 @@ const Steps = () => {
       alert("There was an error saving the loaded cells information");
     }
   };
+
+  const handleDownload = () => {
+    window.location.href = 'http://localhost:8080/downloadManifest';
+    setManifestDownloaded(true);
+};
   
   return (
     <div className="flex flex-col items-center">
@@ -253,6 +262,27 @@ const Steps = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showDownload && (
+        <div className="absolute flex flex-col h-[50%] w-[50%] left-[25%] rounded-md opacity-95 bg-slate-500 text-white font-bold text-center justify-center items-center">
+        <div className="">
+            Balance finished. Please download and email outbound manifest.  
+        </div>
+        <button
+            onClick={handleDownload}
+            className="w-[300px] p-4 m-2 bg-green-600 rounded-2xl hover:text-white cursor-pointer"
+        >
+            Download Manifest
+        </button>
+        {manifestDownloaded && 
+            <Link
+                href="/options"
+            >
+                Back to options
+            </Link>
+        }
+    </div>
       )}
 
     </div>

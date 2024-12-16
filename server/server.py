@@ -71,6 +71,9 @@ def createIDS(grid: list[list[Container]]):
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
 def createToUnload(toUnload, iDs):
     unload = np.zeros(len(iDs))
+    print("IIIIIIIIIIIII")
+    print(iDs)
+    print(toUnload)
     for container in toUnload:
         if iDs[container]:
             unload[iDs[container]] += 1
@@ -135,7 +138,6 @@ def generateLURender(soln, startGrid):
     steps = []
     steps.append(startGrid)
     count = 96
-
     for i in range(len(soln)):
         action = soln[i][2]
         xPos, yPos = soln[i][0], soln[i][1]
@@ -144,7 +146,10 @@ def generateLURender(soln, startGrid):
         if action == -1:
             nextGrid[xPos][yPos] = str(count)
             count += 1
-        if action == -2:
+        elif action == -2:
+            nextGrid[xPos][yPos] = "UNUSED"
+        else:
+            nextGrid[action][soln[i][3]] = nextGrid[xPos][yPos]
             nextGrid[xPos][yPos] = "UNUSED"
         steps.append(nextGrid)
     return steps
@@ -437,7 +442,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                         cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
                 continue
 
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -490,7 +495,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
             if(curr_grid[row][col] < 96 and unload[int(curr_grid[row][col])]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
@@ -501,7 +506,7 @@ def loadUnload(grid, toUnload, toLoad):
                 newUnload = np.copy(unload)
                 newUnload[int(curr_grid[row][col])] -= 1
                 numOfStates += 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2, 0)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 def getCellIndex(cell_str):
@@ -515,7 +520,10 @@ def getCellIndex(cell_str):
 def getCellTitle(index):
     col = index % 12  # Assume there are 12 columns in the grid
     row = 7 - (index // 12)  # For a 8-row grid, assuming index starts at 0
-    manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+    f = open("./globals/path.txt", "r")
+    manifest_name = f.read().strip()
+    f.close()
+    manifest_path = "./manifests/" + manifest_name
     containerClassGrid = read_manifest.read_manifest(manifest_path)  
     gridNames = manifestToGrid(containerClassGrid) 
     
@@ -793,10 +801,15 @@ def generateLUSteps():
         containerClassGrid = read_manifest.read_manifest(manifest_path)
 
         # generate necessary data
+        print("OOOOOOOOOOOOOOOO")
         iDs = createIDS(containerClassGrid)
+        print("AAAAAAAAAAA")
         toUnload = createToUnload(containersToUnload, iDs)
+        print("EEEEEEEEEEEEEEE")
         ship = manifestToGridLoad(containerClassGrid, iDs)
+        print("IIIIIIIIIIII")
         shipNames = manifestToGrid(containerClassGrid)
+        print("SHHHHHHHHHH")
         solution = loadUnload(ship, toUnload, loadSize)
 
         # debugging shit - felix
@@ -807,6 +820,7 @@ def generateLUSteps():
         # here im basically using the last item in the load unload return array to maniuplate the cargo array to represent the steps
         # it may need to be tweaked based on what andrew was saying about there being moves within the ship unfortunately but we will see
         moves = solution[2]
+        print("OOOOOOOOOOOOOOOO")
         steps = generateLURender(moves, shipNames)
 
         print("moves", moves)
@@ -855,7 +869,10 @@ def submit_load():
 @app.route("/getGridNames", methods=["GET"])
 def get_grid_names():
     try:
-        manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+        f = open("./globals/path.txt", "r")
+        manifest_name = f.read().strip()
+        f.close()
+        manifest_path = "./manifests/" + manifest_name
         containerClassGrid = read_manifest.read_manifest(manifest_path)
         
         gridNames = manifestToGrid(containerClassGrid) 

@@ -7,6 +7,14 @@ import Containers from "../containers/containersLoadUnload";
 type Matrix = string[][]
 type Move = [number, number, number, number]
 
+interface FormElements extends HTMLFormControlsCollection {
+  comments: HTMLInputElement
+}
+
+interface CommentFormElement extends HTMLFormElement {
+  readonly elements: FormElements
+}
+
 const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
   const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
@@ -57,6 +65,8 @@ const Steps = () => {
   const [manifestDownloaded, setManifestDownloaded] = useState(false);
   const [containerName, setContainerName] = useState("");
   const [containerWeight, setContainerWeight] = useState(0);
+
+  const [comments, setComments] = useState<string>("");
   
   useEffect(() => {
     // Only attempt to process path when currentMove is greater than 0 and path exists
@@ -173,7 +183,39 @@ const Steps = () => {
   const handleDownload = () => {
     window.location.href = 'http://localhost:8080/downloadManifest';
     setManifestDownloaded(true);
-};
+  };
+
+  const logToServer = async (message: string, level: string) => {
+    try {
+        await fetch('http://localhost:8080/log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message,
+                level,
+                component: 'ContainersPanel',
+                timestamp: new Date().toISOString()
+            })
+        });
+    } catch (error) {
+        console.error('Failed to send log to server:', error);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<CommentFormElement>) => {
+    event.preventDefault();
+    const commentValue = event.currentTarget.elements.comments.value;
+    await logToServer(`User submitted comment: "${commentValue}"`, 'info');
+    setComments("");
+  };
+
+  let [xPos, yPos, dxPos, dyPos] = [0, 0, 0, 0]
+
+  if (currentMove < moves.length - 1) {
+    let [xPos, yPos, dxPos, dyPos] = path[currentMove + 1]
+  }
   
   return (
     <div className="flex flex-col items-center">
@@ -191,6 +233,25 @@ const Steps = () => {
           >
             PREV
           </button>
+          {currentMove >= 0 && currentMove < moves.length - 1 && (
+            <>
+              {dxPos === -1 && (
+                  <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
+                    Load container {moves[currentMove][xPos][yPos]} to ({xPos}, {yPos})
+                  </p>
+                )}
+                {dxPos === -2 && (
+                  <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
+                    Unload container at ({xPos}, {yPos}, {moves[currentMove][xPos][yPos]})
+                  </p>
+                )}
+                {dxPos >= 0 && (
+                  <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
+                    Move starting cell from ({xPos}, {yPos}) to ({dxPos}, {dyPos}).
+                  </p>
+                )}
+            </>
+          )}
         </div>
 
         <Containers
@@ -210,6 +271,27 @@ const Steps = () => {
           >
             NEXT
           </button>
+
+          <form onSubmit={handleSubmit} className="w-full ml-[39%]">
+            <div className="flex flex-col">
+                <input
+                    id="comments"
+                    name="comments"
+                    type="text"
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Comments"
+                    required
+                />
+            </div>
+            <button
+                type="submit"   
+                className="w-full mt-[15%] py-1 bg-blue-600 rounded-md font-bold text-white"
+            >
+                SUBMIT
+            </button>
+          </form>
         </div>
       </div>
       

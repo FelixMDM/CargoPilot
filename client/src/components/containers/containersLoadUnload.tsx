@@ -6,10 +6,11 @@ interface ContainersProps {
   grid: string[][][]; // Array of grids for each move
   currentMove: number; // Index of the current move
   highlightedCell?: { row: number; col: number; bgColor: string }; // prop for highlighted cell
+  highlightedCell2?: { row: number; col: number; bgColor: string };
   cellTitleOverride?: { row: number; col: number; title: string };
 }
 
-const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell, cellTitleOverride }) => {
+const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, highlightedCell, highlightedCell2, cellTitleOverride }) => {
   const { selectedCellsId, setSelectedCellsId } = useSelectedCells();
   const [gridNames, setGridNames] = useState<string[][]>([]);
 
@@ -66,7 +67,14 @@ const Containers: React.FC<ContainersProps> = ({ selectable, grid, currentMove, 
             } else if (highlightedCell.bgColor === "red") {
               cellBgColor = "bg-red-500"; // Apply red background color
             }
-          } else if (selectable) {
+          } else if(highlightedCell2 && highlightedCell2.row === row && highlightedCell2.col === col) {
+            if (highlightedCell2.bgColor === "green") {
+              cellBgColor = "bg-green-500"; // Apply green background color
+            } else if (highlightedCell2.bgColor === "red") {
+              cellBgColor = "bg-red-500"; // Apply red background color
+            }
+          }
+          else if (selectable) {
             cellBgColor = isSelected ? "bg-green-500" : "bg-gray-300";
           }
 

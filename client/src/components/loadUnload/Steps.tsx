@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import Containers from "../containers/containersLoadUnload";
 
 type Matrix = string[][]
-type Move = [number, number, number]
+type Move = [number, number, number, number]
 
 const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-  const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
+  const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
   const [currentLoadIndex, setCurrentLoadIndex] = useState(96);
   const [loadedCellsInfo, setLoadedCellsInfo] = useState<Array<{ posX: number; posY: number; weight: number; label: string }>>([
     { posX: 0, posY: 0, weight: 0, label: "test" },
@@ -47,6 +47,8 @@ const Steps = () => {
 
   const [currentMove, setCurrentMove] = useState(0);
   const [highlightedCell, setHighlightedCell] = useState<{ row: number; col: number; bgColor: string } | undefined>(undefined);
+  const [highlightedCell2, setHighlightedCell2] = useState<{ row: number; col: number; bgColor: string } | undefined>(undefined);
+
   
   const [showComplete, setShowComplete] = useState(false);
   const [askLoadInfo, setAskLoadInfo] = useState(false);
@@ -63,17 +65,25 @@ const Steps = () => {
       const row = path[currentMove - 1][0];
       const col = path[currentMove - 1][1];
       const action = path[currentMove - 1][2]; // use the action from the path array
+      const row2 = path[currentMove - 1][2]
+      const col2 = path[currentMove - 1][3]
 
-      const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
-      if (action === -1) {
-        setAskLoadInfo(true);
+      if(action > -1){
+        setHighlightedCell({ row: row, col: col, bgColor: "red" });
+        setHighlightedCell2({ row: row2, col: col2, bgColor: "green"});
+      } else{
+        const bgColor = action === -1 ? "green" : action === -2 ? "red" : "";
+        if (action === -1) {
+          setAskLoadInfo(true);
+        }
+        setHighlightedCell({ row, col, bgColor });
+        setHighlightedCell2(undefined);
       }
-  
-      setHighlightedCell({ row, col, bgColor });
       }
-      else if (currentMove === 0) {
-        setHighlightedCell(undefined);
-    }
+    else if (currentMove === 0) {
+      setHighlightedCell(undefined);
+      setHighlightedCell2(undefined);
+  }
   }, [currentMove, path]);
   
   
@@ -95,7 +105,7 @@ const Steps = () => {
   
 
   const handleAskLoadInfoSubmit = () => {
-    if (highlightedCell) {
+    if (highlightedCell || highlightedCell2) {
       let updatedGrid = [...moves];
       for(let i = 0; i < updatedGrid.length; i++){
         for(let j = 0; j < 8; j++){
@@ -179,6 +189,7 @@ const Steps = () => {
           grid={moves}
           currentMove={currentMove}
           highlightedCell={highlightedCell} // pass the highlighted cell prop
+          highlightedCell2={highlightedCell2}
         />
 
         <div className="flex flex-col w-[10%] space-y-[15%] items-center">

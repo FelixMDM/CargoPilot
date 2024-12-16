@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import Containers from "../containers/containersLoadUnload";
 import { useSelectedCells } from "./SelectedCellsContext";
 
+interface FormElements extends HTMLFormControlsCollection {
+  comments: HTMLInputElement
+}
+
+interface CommentFormElement extends HTMLFormElement {
+  readonly elements: FormElements
+}
+
 type Matrix = string[][]
 type Move = [number, number, number]
 const Unload = ({ nextStepsPage }) => {
@@ -76,6 +84,7 @@ const Unload = ({ nextStepsPage }) => {
   const [numLoad, setNumLoad] = useState<number>(0); // For the number of containers
   const [askNumLoad, setAskNumLoad] = useState(false); // To control visibility of popup
   const { selectedCellsId } = useSelectedCells(); // Use selectedCellsId directly 
+  const [comments, setComments] = useState<string>("");
 
   const continueProcess = () => {
       alert("Containers submitted successfully!");
@@ -123,6 +132,32 @@ const Unload = ({ nextStepsPage }) => {
     }
   };
 
+  const logToServer = async (message: string, level: string) => {
+    try {
+        await fetch('http://localhost:8080/log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message,
+                level,
+                component: 'ContainersPanel',
+                timestamp: new Date().toISOString()
+            })
+        });
+    } catch (error) {
+        console.error('Failed to send log to server:', error);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<CommentFormElement>) => {
+    event.preventDefault();
+    const commentValue = event.currentTarget.elements.comments.value;
+    await logToServer(`User submitted comment: "${commentValue}"`, 'info');
+    setComments("");
+  };
+
   // const handleSubmitContainers = async () => {
   //   try {
   //     const response = await fetch("http://localhost:8080/submitLoad", {
@@ -159,6 +194,26 @@ const Unload = ({ nextStepsPage }) => {
           >
             UNLOAD
           </button>
+          <form onSubmit={handleSubmit} className="ml-[40%] w-full">
+            <div className="flex flex-col">
+                <input
+                    id="comments"
+                    name="comments"
+                    type="text"
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Comments"
+                    required
+                />
+            </div>
+            <button
+                type="submit"   
+                className="w-full mt-[15%] py-1 bg-blue-600 rounded-md font-bold text-white"
+            >
+                SUBMIT
+            </button>
+          </form>
         </div>
       </div>
 
@@ -191,6 +246,13 @@ const Unload = ({ nextStepsPage }) => {
           </div>
         </div>
       )}
+      
+      <div className="w-[80%] text-white p-2 font-bold text-2xl bg-blue-950">
+          TITANIC
+      </div>
+      <div className="w-[80%] h-[300px] p-2 text-white font-bold text-2xl bg-red-950">
+          TITANIC 
+      </div>
     </div>
   );
 };

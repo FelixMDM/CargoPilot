@@ -31,8 +31,8 @@ grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-grid2 = [[-2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -2],
-        [-1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid2 = [[-2, 1, 2, -2, -1, -1, -1, -1, -1, -1, -1, -2],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -907,17 +907,17 @@ def download_manifest():
 #    )
 
 if __name__ == "__main__":
-    print("hello world")
-    unload = np.zeros(4)
-    unload[0] = 1
-    unload[2] = 1
-    solution = loadUnload(grid2, unload, load)
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
+    # print("hello world")
+    # unload = np.zeros(4)
+    # unload[1] = 1
+    # unload[2] = 1
+    # solution = loadUnload(grid2, unload, 6)
+    # # solution = balance(grid)
+    # # print(hueristicBalance(grid))
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
 
     app.run(debug=True, port=8080)
 

@@ -11,6 +11,26 @@ const Unload = ({ nextStepsPage }) => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
 
   useEffect(() => {
+    // const fetchSteps = async () => {
+    //   try {
+    //     fetch("http://localhost:8080/getLUSteps", {
+    //       method: "GET",
+    //   }).then((response) => response.json()).then((data) => {
+    //     setGrid(data[0].steps);
+  
+    //     // if you need to know what's receieved from this request, look here first
+    //     console.log("haiiiiiiiii");
+    //     console.log(data);
+    //     console.log(data[0]);
+    //     console.log(data[1]);
+    //     console.log("steps: ", data[0].steps);
+    //   });
+    //   } catch (error) {
+    //     console.error("Full error details:", error);
+    //     alert("There was an error retrieving the steps for load/unload");
+    //   }
+    // };
+    // fetchSteps()
     try {
       fetch("http://localhost:8080/getLUSteps", {
         method: "GET",

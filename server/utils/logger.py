@@ -15,7 +15,7 @@ class ServerLogger:
         # Setup log directory and file
         log_dir = Path("logs")
         log_dir.mkdir(exist_ok=True)
-        log_file = log_dir / f"server-{datetime.now().strftime('%Y')}.txt"
+        log_file = log_dir / f"KeoghsPort{datetime.now().strftime('%Y')}.txt"
         
         # Configure logger
         self.logger = logging.getLogger("ServerLogger")

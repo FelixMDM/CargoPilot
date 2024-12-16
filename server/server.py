@@ -33,8 +33,8 @@ grid = [[7, -1, 12, -1, 31, 1, -1, -1, 10, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]]
 
-grid2 = [[-2, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -2],
-        [-1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+grid2 = [[-2, 1, 2, -2, -1, -1, -1, -1, -1, -1, -1, -2],
+        [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -72,6 +72,9 @@ def createIDS(grid: list[list[Container]]):
 # We are doing it this way ot hopefully save space that way we can represent the grid as just ints and not strings
 def createToUnload(toUnload, iDs):
     unload = np.zeros(len(iDs))
+    print("IIIIIIIIIIIII")
+    print(iDs)
+    print(toUnload)
     for container in toUnload:
         if iDs[container]:
             unload[iDs[container]] += 1
@@ -135,16 +138,20 @@ def generateSteps(soln, startGrid):
 def generateLURender(soln, startGrid):
     steps = []
     steps.append(startGrid)
-
+    count = 96
     for i in range(len(soln)):
         action = soln[i][2]
         xPos, yPos = soln[i][0], soln[i][1]
 
         nextGrid = copy.deepcopy(steps[i])
         if action == -1:
-            nextGrid[xPos][yPos] = "LOAD"
-        if action == -2:
-            nextGrid[xPos][yPos] = "UNLOAD"
+            nextGrid[xPos][yPos] = str(count)
+            count += 1
+        elif action == -2:
+            nextGrid[xPos][yPos] = "UNUSED"
+        else:
+            nextGrid[action][soln[i][3]] = nextGrid[xPos][yPos]
+            nextGrid[xPos][yPos] = "UNUSED"
         steps.append(nextGrid)
     return steps
 
@@ -414,6 +421,10 @@ def loadUnload(grid, toUnload, toLoad):
             # finished
             container_count = sum(1 for row in curr_grid for cell in row if cell >= 0)
             server_logger.info(f"Load/Unload operation completed. Final container count: {container_count}")
+            with open("./globals/weights.txt", 'w') as file:
+                for line in curr_grid:
+                    for weight in line:
+                        file.write(f"{int(weight)}\n")
             return curr_cost, curr_grid, path
         if(count % 100 == 0):
             print(hCost)
@@ -436,7 +447,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                         cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
                 continue
 
             # first calculate the cost it will take to get from the cranes current position to this specific container
@@ -489,7 +500,7 @@ def loadUnload(grid, toUnload, toLoad):
                     if(not craneDocked):
                        cost += 2 + 8 - pos[0] + pos[1]
                     numOfStates += 1
-                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
+                    heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, unload, load - 1), numOfStates, newgrid, path + [(row + 1, col, -1, 0)], curr_cost + cost, load - 1, unload, (row + 1, col), False))
             if(curr_grid[row][col] < 96 and unload[int(curr_grid[row][col])]):
                 newgrid = np.copy(curr_grid)
                 cost = col + 8 - row + 2 + craneCost
@@ -500,7 +511,7 @@ def loadUnload(grid, toUnload, toLoad):
                 newUnload = np.copy(unload)
                 newUnload[int(curr_grid[row][col])] -= 1
                 numOfStates += 1
-                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2)], curr_cost + cost, load, newUnload, (8, 0), True))
+                heapq.heappush(heap, (curr_cost + cost + hueristicLoad(newgrid, newUnload, load), numOfStates, newgrid, path + [(row, col, -2, 0)], curr_cost + cost, load, newUnload, (8, 0), True))
     return None
 
 def getCellIndex(cell_str):
@@ -514,7 +525,10 @@ def getCellIndex(cell_str):
 def getCellTitle(index):
     col = index % 12  # Assume there are 12 columns in the grid
     row = 7 - (index // 12)  # For a 8-row grid, assuming index starts at 0
-    manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+    f = open("./globals/path.txt", "r")
+    manifest_name = f.read().strip()
+    f.close()
+    manifest_path = "./manifests/" + manifest_name
     containerClassGrid = read_manifest.read_manifest(manifest_path)  
     gridNames = manifestToGrid(containerClassGrid) 
     
@@ -730,6 +744,28 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells, sizeOfMyLoad)
     return jsonify({"message": "Unload action completed and data saved"}), 200
 
+@app.route("/getLoadGrid", methods=["GET"])
+def getLUGrid():
+    try:
+        manifestName = ""
+        with open("./globals/path.txt", "r") as file:
+            manifestName = file.readline().strip()
+        manifest_path = "./manifests/" + manifestName
+
+        # printing the manifest that we're currently using
+        print("manifest curr:", manifest_path)
+
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+
+        # generate necessary data
+        shipNames = manifestToGrid(containerClassGrid)
+        returnItems = [{"steps": [shipNames]}]
+
+        return jsonify(returnItems)
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 @app.route("/getLUSteps", methods=["GET"])
 def generateLUSteps():
     try:
@@ -743,6 +779,16 @@ def generateLUSteps():
                 - FORMAT RESPONSE
                 - TWEAK FRONTEND TO PICK UP WHAT IM PUTTING DOWN
         """
+        
+        # global last_load_request
+        # # Get current timestamp
+        # current_request = datetime.now()
+
+        # # If there was a recent request (within last 2 seconds), skip processing
+        # if last_load_request and (current_request - last_load_request).total_seconds() < 2:
+        #     return jsonify({'message': 'Request too soon after previous request'}), 429
+        
+        # last_load_request = current_request
         # create access
         manifestName = ""
         with open("./globals/path.txt", "r") as file:
@@ -760,10 +806,15 @@ def generateLUSteps():
         containerClassGrid = read_manifest.read_manifest(manifest_path)
 
         # generate necessary data
+        print("OOOOOOOOOOOOOOOO")
         iDs = createIDS(containerClassGrid)
+        print("AAAAAAAAAAA")
         toUnload = createToUnload(containersToUnload, iDs)
+        print("EEEEEEEEEEEEEEE")
         ship = manifestToGridLoad(containerClassGrid, iDs)
+        print("IIIIIIIIIIII")
         shipNames = manifestToGrid(containerClassGrid)
+        print("SHHHHHHHHHH")
         solution = loadUnload(ship, toUnload, loadSize)
 
         # debugging shit - felix
@@ -774,7 +825,13 @@ def generateLUSteps():
         # here im basically using the last item in the load unload return array to maniuplate the cargo array to represent the steps
         # it may need to be tweaked based on what andrew was saying about there being moves within the ship unfortunately but we will see
         moves = solution[2]
+        print("OOOOOOOOOOOOOOOO")
         steps = generateLURender(moves, shipNames)
+
+        with open("./globals/names.txt", 'w') as file:
+            for line in steps[-1]:
+                for name in line:
+                    file.write(str(name) + "\n")
 
         print("moves", moves)
         print("steps", steps)
@@ -822,7 +879,10 @@ def submit_load():
 @app.route("/getGridNames", methods=["GET"])
 def get_grid_names():
     try:
-        manifest_path = "./manifests/ShipCase1.txt" #needs to be dynamically updated to be working manifest
+        f = open("./globals/path.txt", "r")
+        manifest_name = f.read().strip()
+        f.close()
+        manifest_path = "./manifests/" + manifest_name
         containerClassGrid = read_manifest.read_manifest(manifest_path)
         
         gridNames = manifestToGrid(containerClassGrid) 
@@ -932,47 +992,77 @@ def clear_step():
         server_logger.error(f"Error clearing step state: {str(e)}")
         return jsonify({"error": "Failed to clear step state"}), 500
 
-# def save_state(grid, path, pos, to_load, to_unload):
-#     state = {
-#         "grid": grid,  # Serialize grid as a list of lists
-#         "path": path,  # Steps completed
-#         "pos": pos,    # Crane position
-#         "to_load": to_load,
-#         "to_unload": to_unload,
-#     }
+@app.route('/saveLoadedCellsInfo', methods=['POST'])
+def save_loaded_cells_info():
+    try:
+        loaded_cells_info = request.json
 
-#     try:
-#         with open("./globals/recover.txt", "w") as file:
-#             file.write(str(state))
-#         return True
-#     except Exception as e:
-#         server_logger.error(f"Failed to save state: {str(e)}")
-#         return False
+        adjust_files(loaded_cells_info)
+        
+        if not loaded_cells_info:
+            return jsonify({"error": "No data received"}), 400
+        
+        print("Received Loaded Cells Info:")
+        for cell in loaded_cells_info:
+            print(f"Container: {cell['label']}, Position: ({cell['posX']}, {cell['posY']}), Weight: {cell['weight']}")
+        
+        return jsonify({"message": "Loaded cells info saved successfully"}), 200
     
-# def load_state():
-#     with open("./globals/recover.txt", "r") as file:
-#         state = eval(file.read())
+    except Exception as e:
+        print(f"Error saving loaded cells info: {str(e)}")
+        return jsonify({"error": "Failed to save loaded cells info"}), 500
 
-#     return (
-#         state["grid"],
-#         state["path"],
-#         state["pos"],
-#         state["to_load"],
-#         state["to_unload"]
-#    )
+def adjust_files(loaded_cells_info):
+    names = []
+    weights = []
+
+    with open("./globals/names.txt", "r") as file:
+        for line in file:
+            names.append(line.strip())
+
+    with open("./globals/weights.txt", "r") as file:
+        for line in file:
+            weights.append(line.strip())
+
+    i = 1
+    for cell in loaded_cells_info:
+        if i == 1: # skipping first case
+            i -= 1
+            continue
+
+        posX = cell['posX'] # don't need
+        posY = cell['posY'] # don't need
+        label = cell['label']
+        weight = cell['weight']
+
+        index = posX * 12 + posY
+
+        # if the index is invalid
+        if 0 <= index < len(names):
+            # update name and weight
+            names[index] = label
+            weights[index] = str(weight)
+
+    with open("./globals/names.txt", "w") as file:
+        for name in names:
+            file.write(str(name) + "\n")
+
+    with open("./globals/weights.txt", "w") as file:
+        for weight in weights:
+            file.write(str(weight) + "\n")
 
 if __name__ == "__main__":
-    print("hello world")
-    unload = np.zeros(4)
-    unload[0] = 1
-    unload[2] = 1
-    solution = loadUnload(grid2, unload, load)
-    # solution = balance(grid)
-    # print(hueristicBalance(grid))
-    print("goodbye world")
-    print(solution[0])
-    print(solution[2])
-    print(solution[1])
+    # print("hello world")
+    # unload = np.zeros(4)
+    # unload[1] = 1
+    # unload[2] = 1
+    # solution = loadUnload(grid2, unload, 6)
+    # # solution = balance(grid)
+    # # print(hueristicBalance(grid))
+    # print("goodbye world")
+    # print(solution[0])
+    # print(solution[2])
+    # print(solution[1])
 
     app.run(debug=True, port=8080)
 

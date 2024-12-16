@@ -267,7 +267,7 @@ const Steps = () => {
       {showDownload && (
         <div className="absolute flex flex-col h-[50%] w-[50%] left-[25%] rounded-md opacity-95 bg-slate-500 text-white font-bold text-center justify-center items-center">
         <div className="">
-            Balance finished. Please download and email outbound manifest.  
+            Load Unload finished. Please download and email outbound manifest.  
         </div>
         <button
             onClick={handleDownload}

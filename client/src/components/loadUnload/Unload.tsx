@@ -32,7 +32,7 @@ const Unload = ({ nextStepsPage }) => {
     // };
     // fetchSteps()
     try {
-      fetch("http://localhost:8080/getLUSteps", {
+      fetch("http://localhost:8080/getLoadGrid", {
         method: "GET",
     }).then((response) => response.json()).then((data) => {
       setGrid(data[0].steps);
@@ -41,7 +41,6 @@ const Unload = ({ nextStepsPage }) => {
       console.log("haiiiiiiiii");
       console.log(data);
       console.log(data[0]);
-      console.log(data[1]);
       console.log("steps: ", data[0].steps);
     });
     } catch (error) {

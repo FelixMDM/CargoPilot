@@ -717,6 +717,28 @@ def confirm_unload():
     cellsToUnloadFile(selected_cells, sizeOfMyLoad)
     return jsonify({"message": "Unload action completed and data saved"}), 200
 
+@app.route("/getLoadGrid", methods=["GET"])
+def getLUGrid():
+    try:
+        manifestName = ""
+        with open("./globals/path.txt", "r") as file:
+            manifestName = file.readline().strip()
+        manifest_path = "./manifests/" + manifestName
+
+        # printing the manifest that we're currently using
+        print("manifest curr:", manifest_path)
+
+        containerClassGrid = read_manifest.read_manifest(manifest_path)
+
+        # generate necessary data
+        shipNames = manifestToGrid(containerClassGrid)
+        returnItems = [{"steps": [shipNames]}]
+
+        return jsonify(returnItems)
+    except Exception as e:
+        server_logger.error("Server Error fetching grid names", error=str(e))
+        return jsonify({'error': "Failed to fetch grid names"}), 500
+
 @app.route("/getLUSteps", methods=["GET"])
 def generateLUSteps():
     try:
@@ -730,6 +752,16 @@ def generateLUSteps():
                 - FORMAT RESPONSE
                 - TWEAK FRONTEND TO PICK UP WHAT IM PUTTING DOWN
         """
+        
+        # global last_load_request
+        # # Get current timestamp
+        # current_request = datetime.now()
+
+        # # If there was a recent request (within last 2 seconds), skip processing
+        # if last_load_request and (current_request - last_load_request).total_seconds() < 2:
+        #     return jsonify({'message': 'Request too soon after previous request'}), 429
+        
+        # last_load_request = current_request
         # create access
         manifestName = ""
         with open("./globals/path.txt", "r") as file:

@@ -17,7 +17,7 @@ type Move = [number, number, number, number]
 const ContainersPanel = ()  => {
 
     const [grid, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
-    const [moves, setMoves] = useState<Move[]>(Array(2).fill(Array(4).fill(0)));
+    const [moves, setMoves] = useState<Move[]>(Array(2).fill(Array(5).fill(0)));
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [comments, setComments] = useState<string>("");
@@ -25,6 +25,8 @@ const ContainersPanel = ()  => {
     
     const [startCell, setStartCell] = useState("None");
     const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+
+    const [cost, setCost] = useState(0);
 
     const logToServer = async (message: string, level: string) => {
         try {
@@ -56,6 +58,7 @@ const ContainersPanel = ()  => {
         if (currentMoveIndex < moves.length - 1) {
             updateGridForMove(currentMoveIndex + 1);
             setCurrentMoveIndex((prev) => prev + 1);
+            setCost(cost - moves[currentMoveIndex][4])
         }
     
         if (currentIndex < grid.length - 1) {
@@ -126,6 +129,7 @@ const ContainersPanel = ()  => {
                         }).then((response) => response.json()).then((data) => {
                             setGrid(data[0].steps);
                             setMoves(data[1].moves);
+                            setCost(data[2].cost);
                             console.log("haiiiiiiiii");
                             console.log(data);
                             console.log(data[0]);
@@ -157,6 +161,9 @@ const ContainersPanel = ()  => {
 
     return (
         <div className="flex flex-col items-center">
+            <div className="w-full bg-blue-100 text-blue-900 text-center py-4 font-bold text-xl">
+                Estimated Cost: {cost} STEPS: {currentIndex}/{moves.length}
+            </div>
             <div className="flex flex-row mt-[5%] justify-evenly">
                 <div className="flex flex-col w-[10%] space-y-[15%] items-center">
                     <button 
@@ -167,7 +174,7 @@ const ContainersPanel = ()  => {
                     </button>
                     {currentIndex >= 0 && currentIndex < moves.length && 
                         <p className="bg-gray-50 border p-2 border-gray-300 text-gray-900 text-sm rounded-md">
-                            Move {startCell} from ({moves[currentMoveIndex][0]}, {moves[currentMoveIndex][1]}) to ({moves[currentMoveIndex][2]}, {moves[currentMoveIndex][3]}).
+                            Move {startCell} from ({moves[currentMoveIndex][0]}, {moves[currentMoveIndex][1]}) to ({moves[currentMoveIndex][2]}, {moves[currentMoveIndex][3]}). Cost: {moves[currentIndex][4]}
                         </p>
                     }
                 </div> 

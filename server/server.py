@@ -356,7 +356,7 @@ def balance(grid):
                 newgrid = [row[:] for row in curr_grid]
                 newgrid[k][j] = newgrid[index][i]
                 newgrid[index][i] = -1
-                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j)], curr_cost + cost, (k, j)))
+                heapq.heappush(heap, (curr_cost + cost + hueristicBalance(newgrid), newgrid, path + [(index, i, k, j, cost)], curr_cost + cost, (k, j)))
     return None
 
 def balanceOutput(grid: list[list[Container]], steps):
@@ -694,7 +694,7 @@ def upload_mainfest():
             #    for row in soln[2]:
             #        for name in row:
             #            file.write(name + "\n")
-            returnItems = [{"steps": steps}, {"moves": soln[2]}]
+            returnItems = [{"steps": steps}, {"moves": soln[2]}, {"cost": soln[0]}]
             return jsonify(returnItems)
         except Exception as e:
             server_logger.error("Error fetching manifest", error=str(e))

@@ -10,6 +10,10 @@ const Steps = () => {
   const [moves, setGrid] = useState<Matrix[]>([Array(8).fill(Array(12).fill("UNUSED"))]);
   const [path, setMovesFelix] = useState<Move[]>(Array(2).fill(Array(3).fill(0)));
   const [currentLoadIndex, setCurrentLoadIndex] = useState(96);
+  const [loadedCellsInfo, setLoadedCellsInfo] = useState<Array<{ posX: number; posY: number; weight: number; label: string }>>([
+    { posX: 0, posY: 0, weight: 0, label: "test" },
+  ]);
+  
   // const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   //const [currentIndex, setCurrentIndex] = useState(0);
   //const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
@@ -93,7 +97,6 @@ const Steps = () => {
   const handleAskLoadInfoSubmit = () => {
     if (highlightedCell) {
       let updatedGrid = [...moves];
-      // const updatedRow = [...updatedGrid[0][highlightedCell.row]];
       for(let i = 0; i < updatedGrid.length; i++){
         for(let j = 0; j < 8; j++){
           for(let k = 0; k < 12; k++){
@@ -103,16 +106,54 @@ const Steps = () => {
           }
         }
       }
-      // updatedRow[highlightedCell.col] = containerName; // Use containerName or other relevant data
-      // updatedGrid[0][highlightedCell.row] = updatedRow;
       setGrid(updatedGrid);
       setCurrentLoadIndex(currentLoadIndex + 1);
+  
+      setLoadedCellsInfo((prev) => {
+        const updatedLoadedCellsInfo = [
+          ...prev,
+          {
+            posX: highlightedCell.row,
+            posY: highlightedCell.col,
+            weight: containerWeight,
+            label: containerName,
+          }
+        ];
+
+        const currItem = updatedLoadedCellsInfo[updatedLoadedCellsInfo.length - 1];
+        console.log(`Updated Container: ${currItem.posX}, ${currItem.posY} Weight: ${currItem.weight}, Title ${currItem.label}`);
+        return updatedLoadedCellsInfo;
+      });
+  
+      setAskLoadInfo(false);
+      setContainerName("");
+      setContainerWeight(0);
     }
-    
-    console.log(`Container Name: ${containerName}, Weight: ${containerWeight}`);
-    setAskLoadInfo(false); // close the modal after submission
-    setContainerName("");
-    setContainerWeight(0);
+  };
+  
+  const handleConfirm = () => {
+    try {
+      fetch("http://localhost:8080/saveLoadedCellsInfo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loadedCellsInfo)
+      })
+      .then((data) => {
+        console.log("Loaded cells info saved successfully:", data);
+        // Optionally reset the state or show a success message
+        setShowComplete(false);
+      })
+      .catch((error) => {
+        console.error("Error saving loaded cells info:", error);
+        // Optionally show an error message to the user
+        alert("Failed to save loaded cells information");
+      });
+    } catch (error) {
+      console.error("Full error details:", error);
+      alert("There was an error saving the loaded cells information");
+    }
   };
   
   return (
@@ -137,7 +178,7 @@ const Steps = () => {
           selectable={false}
           grid={moves}
           currentMove={currentMove}
-          highlightedCell={highlightedCell} // Pass the highlighted cell prop
+          highlightedCell={highlightedCell} // pass the highlighted cell prop
         />
 
         <div className="flex flex-col w-[10%] space-y-[15%] items-center">
@@ -145,7 +186,7 @@ const Steps = () => {
             style={{ width: "100px", marginLeft: "47%" }}
             className="w-[100%] h-[10%] mt-[15%] bg-blue-600 rounded-md font-bold text-white"
             onClick={handleNext}
-            disabled={currentMove === moves.length - 1}
+            disabled={currentMove === moves.length}
           >
             NEXT
           </button>
@@ -191,9 +232,31 @@ const Steps = () => {
           </div>
         </div>
       )}
+      
+      {showComplete && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-[30%]">
+            <h2 className="text-lg font-bold mb-4"> Congrats All Steps Complete!</h2>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="bg-gray-500 text-white rounded-md px-4 py-2"
+                onClick={() => setShowComplete(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-600 text-white rounded-md px-4 py-2"
+                onClick={handleConfirm}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
 export default Steps;
-

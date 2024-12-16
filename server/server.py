@@ -908,7 +908,23 @@ def download_manifest():
         server_logger.error("downloadManifest error", error=str(e))
         return jsonify({'error': "downloadManifest failed"}), 500
     
-
+@app.route('/saveLoadedCellsInfo', methods=['POST'])
+def save_loaded_cells_info():
+    try:
+        loaded_cells_info = request.json
+        if not loaded_cells_info:
+            return jsonify({"error": "No data received"}), 400
+        
+        print("Received Loaded Cells Info:")
+        for cell in loaded_cells_info:
+            print(f"Container: {cell['label']}, Position: ({cell['posX']}, {cell['posY']}), Weight: {cell['weight']}")
+        
+        return jsonify({"message": "Loaded cells info saved successfully"}), 200
+    
+    except Exception as e:
+        print(f"Error saving loaded cells info: {str(e)}")
+        return jsonify({"error": "Failed to save loaded cells info"}), 500
+    
 # def save_state(grid, path, pos, to_load, to_unload):
 #     state = {
 #         "grid": grid,  # Serialize grid as a list of lists
